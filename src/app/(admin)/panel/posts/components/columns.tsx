@@ -1,0 +1,238 @@
+"use client";
+
+import { MoreHorizontal } from "lucide-react";
+
+import type { Column, ColumnDef } from "@tanstack/react-table";
+import { format, formatDistanceToNow } from "date-fns";
+import { id } from "date-fns/locale";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import { Checkbox } from "@/components/ui/checkbox";
+
+import { SortableColumn } from "@/components/sortable-column";
+
+import { tableFeaturesConfig } from "@/lib/table-features";
+
+import type { Prisma } from "@/generated/prisma/client";
+import { CopyButton } from "@/components/copy-button";
+
+export type Article = Prisma.ArticleGetPayload<{
+  include: {
+    categories: true;
+    streams: true;
+  };
+}>;
+
+type PostColumn = Column<typeof tableFeaturesConfig, Article, unknown>;
+
+function PostSortableColumn({
+  column,
+  title,
+}: {
+  column: PostColumn;
+  title: string;
+}) {
+  const handleSort = column.getToggleSortingHandler();
+
+  return (
+    <SortableColumn
+      title={title}
+      sorted={column.getIsSorted()}
+      onSort={handleSort}
+    />
+  );
+}
+
+type PostsTableAction = {
+  setType: (props:"edit"|"add") => void;
+  onEdit: (props: boolean) => void;
+  onView: (props: boolean) => void;
+  onDelete: (props: boolean) => void;
+  setArticle: (props: Article) => void;
+};
+
+export const getColumns = ({
+  onEdit,
+  onView,
+  onDelete,
+  setArticle,
+  setType
+}: PostsTableAction): ColumnDef<typeof tableFeaturesConfig, Article>[] => [
+  {
+    id: "select",
+
+    enableSorting: false,
+    enableHiding: false,
+
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected()}
+        onCheckedChange={(checked) => {
+          table.toggleAllPageRowsSelected(checked === true);
+        }}
+        aria-label="Select all"
+      />
+    ),
+
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        disabled={!row.getCanSelect()}
+        onCheckedChange={(checked) => {
+          row.toggleSelected(checked === true);
+        }}
+        aria-label="Select row"
+      />
+    ),
+  },
+
+  {
+    accessorKey: "title",
+
+    header: ({ column }) => (
+      <PostSortableColumn column={column} title="Title" />
+    ),
+
+    cell: ({ row }) => (
+      <div className="max-w-100 truncate font-medium">
+        {row.getValue("title")}
+      </div>
+    ),
+  },
+
+  {
+    accessorKey: "categories",
+
+    header: ({ column }) => (
+      <PostSortableColumn column={column} title="Category" />
+    ),
+    cell: ({ row, getValue }) => {
+      const categori = row.original.categories.map((e) => e.name).join(", ");
+      return <span>{categori}</span>;
+    },
+  },
+
+  // {
+  //   accessorKey: "status",
+
+  //   header: "Status",
+
+  //   cell: ({ row }) => {
+  //     const status = row.getValue("status") as Article["status"];
+
+  //     return (
+  //       <span
+  //         className={
+  //           status === "Published"
+  //             ? "inline-flex rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400"
+  //             : "inline-flex rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+  //         }
+  //       >
+  //         {status}
+  //       </span>
+  //     );
+  //   },
+  // },
+
+  {
+    accessorKey: "slug",
+
+    header: ({ column }) => <PostSortableColumn column={column} title="Slug" />,
+  },
+
+  {
+    accessorKey: "updatedAt",
+
+    header: ({ column }) => <PostSortableColumn column={column} title="Date" />,
+    cell: ({ row }) => {
+      return formatDistanceToNow(row.original.updatedAt, {
+        addSuffix: true,
+        locale: id,
+      });
+    },
+  },
+
+  {
+    id: "actions",
+
+    enableSorting: false,
+    enableHiding: false,
+
+    cell: ({ row }) => {
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className="
+              inline-flex
+              h-8
+              w-8
+              items-center
+              justify-center
+              rounded-md
+              border
+              border-transparent
+              hover:bg-muted
+            "
+          >
+            <MoreHorizontal className="h-4 w-4" />
+
+            <span className="sr-only">Open menu</span>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={async () => {
+                const url = `${window.location.origin}/${format(
+                  row.original.createdAt,
+                  "yyyy/MM/dd",
+                )}/${row.original.slug}`;
+
+                await navigator.clipboard.writeText(url);
+              }}
+            >
+              Copy Slug
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setArticle(row.original);
+                onEdit(true);
+                setType("edit")
+              }}
+            >
+              Edit
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onClick={() => {
+                setArticle(row.original);
+                
+                onView(true);
+              }}
+            >
+              View
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem
+              className="text-destructive"
+              onClick={() => {
+                setArticle(row.original);
+                onDelete(true);
+              }}
+            >
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
+  },
+];
