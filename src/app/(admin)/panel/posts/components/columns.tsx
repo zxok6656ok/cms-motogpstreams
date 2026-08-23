@@ -22,6 +22,7 @@ import { tableFeaturesConfig } from "@/lib/table-features";
 
 import type { Prisma } from "@/generated/prisma/client";
 import { CopyButton } from "@/components/copy-button";
+import Image from "next/image";
 
 export type Article = Prisma.ArticleGetPayload<{
   include: {
@@ -51,7 +52,7 @@ function PostSortableColumn({
 }
 
 type PostsTableAction = {
-  setType: (props:"edit"|"add") => void;
+  setType: (props: "edit" | "add") => void;
   onEdit: (props: boolean) => void;
   onView: (props: boolean) => void;
   onDelete: (props: boolean) => void;
@@ -63,7 +64,7 @@ export const getColumns = ({
   onView,
   onDelete,
   setArticle,
-  setType
+  setType,
 }: PostsTableAction): ColumnDef<typeof tableFeaturesConfig, Article>[] => [
   {
     id: "select",
@@ -92,6 +93,58 @@ export const getColumns = ({
       />
     ),
   },
+  {
+    accessorKey: "thumbnail",
+    header: "Thumbnail",
+
+    cell: ({ row }) => {
+      const thumbnail = row.getValue("thumbnail") as string;
+
+      return (
+        <div className="relative h-14 w-20 overflow-hidden rounded-md">
+          {thumbnail ? (
+            <Image
+              src={thumbnail}
+              alt="Thumbnail"
+              fill
+              className="object-cover"
+              sizes="80px"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-muted text-xs text-muted-foreground">
+              No Image
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "poster",
+    header: "WM Player",
+
+    cell: ({ row }) => {
+      const thumbnail = row.getValue("poster") as string;
+
+      return (
+        <div className="relative h-14 w-20 overflow-hidden rounded-md">
+          {thumbnail ? (
+            <Image
+              src={thumbnail}
+              alt="Thumbnail"
+              fill
+              className="object-cover"
+              sizes="80px"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-muted text-xs text-muted-foreground">
+              No Image
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
 
   {
     accessorKey: "title",
@@ -106,6 +159,7 @@ export const getColumns = ({
       </div>
     ),
   },
+  
 
   {
     accessorKey: "categories",
@@ -203,7 +257,7 @@ export const getColumns = ({
               onClick={() => {
                 setArticle(row.original);
                 onEdit(true);
-                setType("edit")
+                setType("edit");
               }}
             >
               Edit
@@ -212,7 +266,7 @@ export const getColumns = ({
             <DropdownMenuItem
               onClick={() => {
                 setArticle(row.original);
-                
+
                 onView(true);
               }}
             >
