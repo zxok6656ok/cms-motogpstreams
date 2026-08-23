@@ -1,6 +1,9 @@
 import { PageForm } from "./components/form";
 import prisma from "../../../../../lib/prisma";
-
+import { Metadata } from "next";
+export const metadata: Metadata = {
+  title: "About",
+};
 export default async function Page() {
   const page = await prisma.page.findUnique({
     where: {
