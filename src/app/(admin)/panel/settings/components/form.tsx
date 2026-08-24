@@ -26,6 +26,7 @@ import {
 import { SiteSetting } from "../page";
 import { saveSiteSettings } from "../action";
 import { toast } from "@/components/ui/toast";
+import { Switch } from "@/components/ui/switch";
 
 const formSchema = z.object({
   siteName: z.string().min(1, "Site name is required."),
@@ -79,6 +80,7 @@ const formSchema = z.object({
       url: z.string().min(1, "URL is required."),
       order: z.number(),
       position: z.enum(["head", "body"]),
+      isActive: z.boolean(),
     }),
   ),
 
@@ -106,7 +108,7 @@ type SiteSettingFormProps = {
   site: SiteSetting | null;
 };
 
-const SiteSettingForm = ({ setting, site }: SiteSettingFormProps) => {
+const SiteSettingForm = ({ site }: SiteSettingFormProps) => {
   const form = useForm<SiteSettingFormValues>({
     resolver: zodResolver(formSchema),
 
@@ -157,12 +159,14 @@ const SiteSettingForm = ({ setting, site }: SiteSettingFormProps) => {
         url: ad.url,
         position: ad.position ?? "body",
         order: ad.order,
+        isActive: ad.isActive,
       })) ?? [
         {
           name: "",
           url: "",
           position: "body",
           order: 0,
+          isActive: true,
         },
       ],
     },
@@ -948,6 +952,7 @@ const SiteSettingForm = ({ setting, site }: SiteSettingFormProps) => {
                   url: "",
                   position: "body",
                   order: adFields.length,
+                  isActive: true,
                 })
               }
             >
@@ -1033,6 +1038,20 @@ const SiteSettingForm = ({ setting, site }: SiteSettingFormProps) => {
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} />
                       )}
+                    </Field>
+                  )}
+                />
+                <Controller
+                  name={`adLinks.${index}.isActive`}
+                  control={form.control}
+                  render={({ field }) => (
+                    <Field className="w-24">
+                      <FieldLabel>Status</FieldLabel>
+
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </Field>
                   )}
                 />

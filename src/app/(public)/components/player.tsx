@@ -7,7 +7,9 @@ import type { Prisma } from "@/generated/prisma/client";
 import { Posts } from "../[...slug]/page";
 import Hls from "./hls";
 import Dash from "./dash";
-import { TextIcon } from "lucide-react";
+import { Calendar, TextIcon } from "lucide-react";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
 
 export type PlayerSite = Prisma.SiteSettingGetPayload<{
   select: {
@@ -34,12 +36,12 @@ export default function Player({
     (stream) => stream.name === activeServer,
   );
 
+  const createdAt = new Date(posts.createdAt);
   return (
     <section className="mx-auto mb-10 w-full max-w-6xl px-4 py-6 sm:mb-20">
-     
       <h2
         className="
-              mb-2
+              mb-1
               min-h-14
               line-clamp-2
               text-xl
@@ -53,6 +55,17 @@ export default function Player({
         <TextIcon />
         {posts.title}
       </h2>
+      <div className="flex gap-1 items-center mb-2">
+        <Calendar />
+        <time
+          dateTime={createdAt.toISOString()}
+          className="text-xs font-black uppercase"
+        >
+          {format(createdAt, "dd MMM yyyy", {
+            locale: id,
+          })}
+        </time>
+      </div>
       <div
         className="
           overflow-hidden

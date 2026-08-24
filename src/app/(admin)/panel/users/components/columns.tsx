@@ -52,33 +52,7 @@ export const getColumns = ({
   onDelete,
   setUser,
 }: UsersTableAction): ColumnDef<typeof tableFeaturesConfig, AuthUser>[] => [
-  {
-    id: "select",
 
-    enableSorting: false,
-    enableHiding: false,
-
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(checked) => {
-          table.toggleAllPageRowsSelected(checked === true);
-        }}
-        aria-label="Select all"
-      />
-    ),
-
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        disabled={!row.getCanSelect()}
-        onCheckedChange={(checked) => {
-          row.toggleSelected(checked === true);
-        }}
-        aria-label="Select row"
-      />
-    ),
-  },
 
   {
     accessorKey: "email",

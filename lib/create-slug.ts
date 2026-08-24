@@ -2,79 +2,72 @@
 
 import prisma from "./prisma";
 
-type SlugDelegate = {
-  findFirst: (args: {
-    where: {
-      slug: string;
-      id?: {
-        not: string;
-      };
-    };
-  }) => Promise<unknown>;
-};
+import crypto from "crypto";
 
 const createSlug = async (
-  model: string,
+  model: "article" | "category",
   value: string,
   limit = 100,
   excludeId?: string,
 ) => {
-  let slug = value
+  const baseSlug = value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-  if (slug.length > limit) {
-    const truncated = slug.slice(0, limit);
-    const lastDash = truncated.lastIndexOf("-");
-
-    slug = lastDash > 0 ? truncated.slice(0, lastDash) : truncated;
-  }
-
   const exists = async (slug: string) => {
-    if (model == "article") {
+    const where = {
+      slug,
+      ...(excludeId
+        ? {
+            id: {
+              not: excludeId,
+            },
+          }
+        : {}),
+    };
+
+    if (model === "article") {
       return prisma.article.findFirst({
-        where: {
-          slug,
-          ...(excludeId
-            ? {
-                id: {
-                  not: excludeId,
-                },
-              }
-            : {}),
-        },
+        where,
+        select: { id: true },
       });
     }
-     return prisma.category.findFirst({
-        where: {
-          slug,
-          ...(excludeId
-            ? {
-                id: {
-                  not: excludeId,
-                },
-              }
-            : {}),
-        },
-      });
+
+    return prisma.category.findFirst({
+      where,
+      select: { id: true },
+    });
   };
 
-  if (!(await exists(slug))) {
-    return slug;
+  const cleanSlug =
+    baseSlug.length > limit
+      ? baseSlug.slice(0, limit).replace(/-+$/, "")
+      : baseSlug;
+
+  if (!(await exists(cleanSlug))) {
+    return cleanSlug;
   }
 
-  let counter = 2;
-
   while (true) {
-    const newSlug = `${slug}-${counter}`;
+    const random = crypto.randomBytes(3).toString("hex");
+    const suffix = `-${random}`;
+
+    const maxBaseLength = limit - suffix.length;
+
+    const truncatedBase =
+      cleanSlug.length > maxBaseLength
+        ? cleanSlug.slice(0, maxBaseLength).replace(/-+$/, "")
+        : cleanSlug;
+
+    const newSlug = `${truncatedBase}${suffix}`;
 
     if (!(await exists(newSlug))) {
       return newSlug;
     }
-
-    counter++;
   }
 };
 

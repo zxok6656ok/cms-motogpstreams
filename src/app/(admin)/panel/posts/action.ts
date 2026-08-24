@@ -1,9 +1,15 @@
 "use server";
 
-import { Stream } from "@/generated/prisma/client";
+import { StatusArticle } from "@/generated/prisma/client";
 import prisma from "../../../../../lib/prisma";
 import { updateTag } from "next/cache";
-
+type StreamInput = {
+  name: string;
+  type: "hls" | "dash";
+  url: string;
+  drmId?: string;
+  drmKey?: string;
+};
 export const deleteArticle = async (postId: string) => {
   try {
     const article = await prisma.article.findUniqueOrThrow({
@@ -11,6 +17,7 @@ export const deleteArticle = async (postId: string) => {
         id: postId,
       },
     });
+    if (!article) throw new Error("Failed to get article");
     await prisma.article.delete({
       where: {
         id: postId,
@@ -20,9 +27,9 @@ export const deleteArticle = async (postId: string) => {
     updateTag(`article:${article.slug}`);
     return {
       success: true,
+      message: "Success to delete article",
     };
   } catch (error) {
-  
     throw new Error("Failed to delete article");
   }
 };
@@ -33,10 +40,13 @@ export const saveArticle = async (data: FormData, id?: string | null) => {
     const thumbnail = data.get("thumbnail") as string;
     const poster = data.get("poster") as string;
     const slug = data.get("slug") as string;
+    const status = data.get("status") as StatusArticle;
     const metaDescription = data.get("metaDescription") as string;
     const categories = data.get("categories") as string;
     const content = data.get("content") as string;
-    const streams = JSON.parse((data.get("streams") as string) || "[]");
+    const streams = JSON.parse(
+      (data.get("streams") as string) || "[]",
+    ) as StreamInput[];
     const categoryNames = categories
       .split(",")
       .map((category) => category.trim())
@@ -67,6 +77,14 @@ export const saveArticle = async (data: FormData, id?: string | null) => {
     let article;
 
     if (id) {
+      const existingArticle = await prisma.article.findUnique({
+        where: {
+          id,
+        },
+        select: {
+          slug: true,
+        },
+      });
       article = await prisma.article.update({
         where: {
           id,
@@ -78,7 +96,7 @@ export const saveArticle = async (data: FormData, id?: string | null) => {
           poster,
           metaDescription,
           content,
-
+          status,
           categories: {
             set: categoryRecords.map((category) => ({
               id: category.id,
@@ -87,7 +105,7 @@ export const saveArticle = async (data: FormData, id?: string | null) => {
 
           streams: {
             deleteMany: {},
-            create: streams.map((stream: Stream) => ({
+            create: streams.map((stream: StreamInput) => ({
               name: stream.name,
               type: stream.type,
               url: stream.url,
@@ -97,8 +115,12 @@ export const saveArticle = async (data: FormData, id?: string | null) => {
           },
         },
       });
+
       updateTag("articles");
-      updateTag(`article:${slug}`);
+      if (existingArticle?.slug) {
+        updateTag(`article:${existingArticle.slug}`);
+      }
+      updateTag(`article:${article.slug}`);
     } else {
       article = await prisma.article.create({
         data: {
@@ -107,6 +129,7 @@ export const saveArticle = async (data: FormData, id?: string | null) => {
           thumbnail,
           poster,
           metaDescription,
+          status,
           content,
           categories: {
             connect: categoryRecords.map((category) => ({
@@ -115,7 +138,7 @@ export const saveArticle = async (data: FormData, id?: string | null) => {
           },
 
           streams: {
-            create: streams.map((stream: Stream) => ({
+            create: streams.map((stream: StreamInput) => ({
               name: stream.name,
               type: stream.type,
               url: stream.url,
@@ -134,10 +157,42 @@ export const saveArticle = async (data: FormData, id?: string | null) => {
         : "The post was successfully created.",
     };
   } catch (error) {
-  
+    throw new Error("Failed to save article");
+  }
+};
+
+export const deleteAllArticle = async (ids: string[]) => {
+  try {
+    if (ids.length === 0) {
+      throw new Error("No articles selected");
+    }
+    const articles = await prisma.article.findMany({
+      where: {
+        id: { in: ids },
+      },
+    });
+    if (articles.length == 0) throw new Error("Failed to get articles");
+    await prisma.article.deleteMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+    });
+
+    updateTag("articles");
+
+    articles.forEach((article) => {
+      updateTag(`article:${article.slug}`);
+    });
+    return {
+      success: true,
+      message: `Success to delete ${articles.length} article`,
+    };
+  } catch (error) {
     return {
       success: false,
-      message: "Failed to save article.",
+      message: "Failed to delete articles",
     };
   }
 };

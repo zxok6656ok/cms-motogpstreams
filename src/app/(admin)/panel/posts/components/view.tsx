@@ -33,7 +33,7 @@ const View = ({ open, setOpen, article }: ViewProps) => {
   </CardHeader>
 
   <CardContent className="space-y-5">
-    {/* Meta */}
+
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div>
         <p className="text-sm text-muted-foreground">
@@ -63,7 +63,6 @@ const View = ({ open, setOpen, article }: ViewProps) => {
       </div>
     </div>
 
-    {/* Description */}
     <div>
       <p className="text-sm text-muted-foreground">
         Meta Description
@@ -74,7 +73,7 @@ const View = ({ open, setOpen, article }: ViewProps) => {
       </p>
     </div>
 
-    {/* Streams */}
+
     <div>
       <p className="text-sm text-muted-foreground mb-2">
         Streaming Sources

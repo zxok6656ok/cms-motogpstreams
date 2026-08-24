@@ -1,12 +1,10 @@
-
 import { Metadata } from "next";
 import prisma from "../../../../../lib/prisma";
 import Table from "./components/table";
 
-
 export const metadata: Metadata = {
   title: "Posts",
-}; 
+};
 import type { Prisma } from "@/generated/prisma/client";
 
 export type Article = Prisma.ArticleGetPayload<{

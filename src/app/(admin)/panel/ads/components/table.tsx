@@ -1,29 +1,24 @@
 "use client";
+
 import { Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/data-table";
+import { toast } from "@/components/ui/toast";
 
 import { getColumns } from "./columns";
-import { useState } from "react";
-import FormPosts from "./form";
-import View from "./view";
+import FormAdsWidgets from "./form";
+
+import type { AdWidget } from "../page";
+import { deleteAdWidget, deleteAllAdWidget } from "../action";
 import Delete from "./delete";
-import type { Prisma } from "@/generated/prisma/client";
-import { deleteAllArticle, deleteArticle } from "../action";
-import { toast } from "@/components/ui/toast";
-import { useRouter } from "next/navigation";
+import View from "./view";
 import { RowSelectionState } from "@tanstack/react-table";
 
-export type Article = Prisma.ArticleGetPayload<{
-  include: {
-    categories: true;
-    streams: true;
-  };
-}>;
-
 type TableProps = {
-  data: Article[];
+  data: AdWidget[];
   page: number;
   pageSize: number;
   pageCount: number;
@@ -42,19 +37,22 @@ export default function Table({
   const [open, setOpen] = useState<boolean>(false);
   const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
   const [openModalView, setOpenModalView] = useState<boolean>(false);
-  const [article, setArticle] = useState<Article | null>(null);
+  const [adWidget, setAdWidget] = useState<AdWidget | null>(null);
   const [type, setType] = useState<"add" | "edit">("add");
   const [typeDelete, setTypeDelete] = useState<"single" | "many">("single");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const router = useRouter();
 
-  const handleDelete = async (postId: string) => {
+  const handleDelete = async (id: string) => {
     try {
-      const { message } = await deleteArticle(postId);
+      const { message } = await deleteAdWidget(id);
 
       setOpenModalDelete(false);
+      setAdWidget(null);
+
       router.refresh();
+
       toast.add({
         type: "success",
         description: message,
@@ -71,11 +69,23 @@ export default function Table({
     }
   };
 
+  const columns = getColumns({
+    setType,
+
+    onEdit: setOpen,
+    onView: setOpenModalView,
+    onDelete: setOpenModalDelete,
+    setAdWidget,
+    setTypeDelete,
+    setSelectedIds,
+    setRowSelection,
+  });
+
   const handleDeleteMany = async (ids: string[]) => {
     try {
-      const { message } = await deleteAllArticle(ids);
+      const { message } = await deleteAllAdWidget(ids);
       setOpenModalDelete(false);
-      setArticle(null);
+      setAdWidget(null);
 
       setSelectedIds([]);
       setRowSelection({});
@@ -96,26 +106,14 @@ export default function Table({
       });
     }
   };
-
-  const columns = getColumns({
-    setType: setType,
-    onEdit: setOpen,
-    onView: setOpenModalView,
-    onDelete: setOpenModalDelete,
-    setArticle: setArticle,
-    setTypeDelete,
-    setSelectedIds,
-    setRowSelection,
-  });
-
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">
       <div className="flex items-start sm:items-center flex-col gap-4 sm:flex-row sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Posts</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Ads Widgets</h1>
 
           <p className="text-sm text-muted-foreground">
-            Manage your blog posts.
+            Manage advertisement widgets.
           </p>
         </div>
 
@@ -130,25 +128,25 @@ export default function Table({
             className="w-full rounded-sm sm:w-auto"
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete All Posts
+            Delete All Widget
             {selectedIds.length > 0 && ` (${selectedIds.length})`}
           </Button>
 
           <Button
             onClick={() => {
-              setArticle(null);
+              setAdWidget(null);
               setType("add");
               setOpen(true);
             }}
             className="w-full rounded-sm sm:w-auto"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Add Posts
+            Add Widget
           </Button>
         </div>
       </div>
 
-      <DataTable<Article>
+      <DataTable<AdWidget>
         data={data}
         columns={columns}
         page={page}
@@ -158,15 +156,23 @@ export default function Table({
         searchKey={search}
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
-        searchPlaceholder="Search posts..."
+        searchPlaceholder="Search ads widgets..."
       />
-      <FormPosts open={open} setOpen={setOpen} article={article} type={type} />
-      <View open={openModalView} setOpen={setOpenModalView} article={article} />
+
+      <FormAdsWidgets
+        open={open}
+        setOpen={setOpen}
+        ads={adWidget}
+        type={type}
+      />
+
+      <View open={openModalView} setOpen={setOpenModalView} ads={adWidget} />
+
       <Delete
         open={openModalDelete}
         setOpen={setOpenModalDelete}
-        title={article?.title}
-        id={article?.id}
+        name={adWidget?.name}
+        id={adWidget?.id}
         onDelete={handleDelete}
         type={typeDelete}
         onDeleteMany={handleDeleteMany}

@@ -1,7 +1,8 @@
-import { PlayIcon } from "lucide-react";
+import { Calendar, PlayIcon } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import Image from "next/image";
 
 type ArticleCardProps = {
   article: {
@@ -39,9 +40,11 @@ export function ArticleCard({ article }: ArticleCardProps) {
         >
           {article.thumbnail && (
             <div className="border-b-4 border-black">
-              <img
+              <Image
                 src={article.thumbnail}
                 alt={article.title}
+                width={640}
+                height={360}
                 className="aspect-video w-full object-cover"
                 loading="lazy"
               />
@@ -70,8 +73,8 @@ export function ArticleCard({ article }: ArticleCardProps) {
                 {article.categories.slice(0, 2).map((category) => (
                   <Link key={category.slug} href={`/category/${category.slug}`}>
                     <span
-                    key={category.slug}
-                    className="
+                      key={category.slug}
+                      className="
                     border-2 border-black
                     bg-[#ff90e8]
                     px-2 py-1
@@ -79,9 +82,9 @@ export function ArticleCard({ article }: ArticleCardProps) {
                     font-black
                     uppercase
                   "
-                  >
-                    {category.name}
-                  </span>
+                    >
+                      {category.name}
+                    </span>
                   </Link>
                 ))}
               </div>
@@ -94,14 +97,17 @@ export function ArticleCard({ article }: ArticleCardProps) {
             )}
 
             <div className="mt-auto flex items-center justify-between gap-3 pt-6">
-              <time
-                dateTime={createdAt.toISOString()}
-                className="text-xs font-black uppercase"
-              >
-                {format(createdAt, "dd MMM yyyy", {
-                  locale: id,
-                })}
-              </time>
+              <div className="flex gap-1 items-center">
+                <Calendar />
+                <time
+                  dateTime={createdAt.toISOString()}
+                  className="text-xs font-black uppercase"
+                >
+                  {format(createdAt, "dd MMM yyyy", {
+                    locale: id,
+                  })}
+                </time>
+              </div>
               <Link href={articleUrl}>
                 <span
                   className="

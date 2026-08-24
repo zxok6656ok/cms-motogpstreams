@@ -100,11 +100,13 @@ export const saveSiteSettings = async (
               url: string;
               order: number;
               position: "head" | "body";
+              isActive: boolean;
             }) => ({
               name: item.name,
               url: item.url,
               order: item.order,
               position: item.position,
+              isActive: item.isActive,
             }),
           ),
         },

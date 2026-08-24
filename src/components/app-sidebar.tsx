@@ -11,6 +11,7 @@ import {
   Files,
   Globe,
   Image,
+  Settings2,
 } from "lucide-react";
 import {
   Sidebar,
@@ -30,13 +31,12 @@ import { usePathname } from "next/navigation";
 import { Site } from "@/app/(admin)/panel/layout";
 import { logout } from "@/app/(auth)/panel/login/action";
 
-// This is sample data.
 const data = {
   versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
   navMain: [
     {
       title: "CMS PANEL",
-      url: "#",
+      url: "/panel/dashboard",
       items: [
         {
           title: "Dashboard",
@@ -83,6 +83,11 @@ const data = {
           title: "Hero",
           url: "hero",
           icon: Image,
+        },
+        {
+          title: "Ads Widgets",
+          url: "ads",
+          icon: Settings2,
         },
         {
           title: "Settings",

@@ -7,34 +7,38 @@ async function fetchArticles(page: number, search: string) {
   const currentPage = Math.max(1, page);
   const skip = (currentPage - 1) * PAGE_SIZE;
 
-  const where = search
-    ? {
-        OR: [
-          {
-            title: {
-              contains: search,
-              mode: "insensitive" as const,
+  const where = {
+    status: "publish" as const,
+
+    ...(search
+      ? {
+          OR: [
+            {
+              title: {
+                contains: search,
+                mode: "insensitive" as const,
+              },
             },
-          },
-          {
-            metaDescription: {
-              contains: search,
-              mode: "insensitive" as const,
+            {
+              metaDescription: {
+                contains: search,
+                mode: "insensitive" as const,
+              },
             },
-          },
-          {
-            categories: {
-              some: {
-                name: {
-                  contains: search,
-                  mode: "insensitive" as const,
+            {
+              categories: {
+                some: {
+                  name: {
+                    contains: search,
+                    mode: "insensitive" as const,
+                  },
                 },
               },
             },
-          },
-        ],
-      }
-    : {};
+          ],
+        }
+      : {}),
+  };
 
   return Promise.all([
     prisma.article.findMany({
@@ -94,6 +98,7 @@ export const getArticle = (slug: string) =>
       return prisma.article.findUnique({
         where: {
           slug,
+          status: "publish",
         },
         include: {
           streams: {

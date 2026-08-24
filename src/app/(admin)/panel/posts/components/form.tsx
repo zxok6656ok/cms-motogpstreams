@@ -35,6 +35,7 @@ const formSchema = z.object({
     .max(150, "Title must be at most 150 characters."),
   thumbnail: z.string().min(1, "Thumbnail is required"),
   poster: z.string().optional(),
+  status: z.enum(["publish", "draft"]),
   slug: z
     .string()
     .min(1, "Slug is required.")
@@ -71,6 +72,7 @@ type FormPostsProps = {
 const FormPosts = ({ open, setOpen, article, type }: FormPostsProps) => {
   const slugTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -79,6 +81,7 @@ const FormPosts = ({ open, setOpen, article, type }: FormPostsProps) => {
       poster: "",
       slug: "",
       metaDescription: "",
+      status: "publish",
       categories: "",
       streams: [
         {
@@ -116,6 +119,7 @@ const FormPosts = ({ open, setOpen, article, type }: FormPostsProps) => {
       formData.append("slug", data.slug);
       formData.append("metaDescription", data.metaDescription ?? "");
       formData.append("categories", data.categories);
+      formData.append("status", data.status);
       formData.append("content", data.content ?? "");
       formData.append("streams", JSON.stringify(data.streams));
       const { message } = await saveArticle(
@@ -147,57 +151,59 @@ const FormPosts = ({ open, setOpen, article, type }: FormPostsProps) => {
       }
     };
   }, []);
+  const defaultValues = {
+    title: "",
+    thumbnail: "",
+    poster: "",
+    slug: "",
+    metaDescription: "",
+    status: "publish" as const,
+    categories: "",
+    streams: [
+      {
+        name: "",
+        type: "hls" as const,
+        url: "",
+        drmId: "",
+        drmKey: "",
+      },
+    ],
+    content: "",
+  };
 
   useEffect(() => {
-    if (type == "add") {
+    if (!open) {
+      form.reset(defaultValues);
+      return;
+    }
+
+    if (type === "add") {
+      form.reset(defaultValues);
+      return;
+    }
+
+    if (type === "edit" && article) {
       form.reset({
-        title: "",
-        slug: "",
-        thumbnail: "",
-        poster: "",
-        metaDescription: "",
-        categories: "",
-        streams: [
-          {
-            name: "",
-            type: "hls",
-            url: "",
-            drmId: "",
-            drmKey: "",
-          },
-        ],
-        content: "",
-      });
-    } else {
-      form.reset({
-        title: article?.title ?? "",
-        slug: article?.slug ?? "",
-        thumbnail: article?.thumbnail ?? "",
-        poster: article?.poster ?? "",
-        metaDescription: article?.metaDescription ?? "",
+        title: article.title ?? "",
+        slug: article.slug ?? "",
+        thumbnail: article.thumbnail ?? "",
+        poster: article.poster ?? "",
+        status: article.status ?? "publish",
+        metaDescription: article.metaDescription ?? "",
         categories:
-          article?.categories?.map((category) => category.name).join(", ") ??
-          "",
-        streams: article?.streams?.map((stream) => ({
-          name: stream.name,
-          type: stream.type,
-          url: stream.url,
-          drmId: stream.drmId ?? "",
-          drmKey: stream.drmKey ?? "",
-        })) ?? [
-          {
-            name: "",
-            type: "hls",
-            url: "",
-            drmId: "",
-            drmKey: "",
-          },
-        ],
-        content: article?.content ?? "",
+          article.categories?.map((category) => category.name).join(", ") ?? "",
+        streams:
+          article.streams?.map((stream) => ({
+            name: stream.name,
+            type: stream.type,
+            url: stream.url,
+            drmId: stream.drmId ?? "",
+            drmKey: stream.drmKey ?? "",
+          })) ?? defaultValues.streams,
+        content: article.content ?? "",
       });
     }
-  }, [type, article]);
-
+  }, [open, type, article, form]);
   return (
     <div>
       <Modal
@@ -303,49 +309,87 @@ const FormPosts = ({ open, setOpen, article, type }: FormPostsProps) => {
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Controller
-              name={"thumbnail"}
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel>URL Thumbnail</FieldLabel>
+              <Controller
+                name={"thumbnail"}
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>URL Thumbnail</FieldLabel>
 
-                  <Input
-                    {...field}
-                    type="url"
-                    placeholder="https://example.com/"
-                    className="rounded-sm"
-                    aria-invalid={fieldState.invalid}
-                  />
+                    <Input
+                      {...field}
+                      type="url"
+                      placeholder="https://example.com/"
+                      className="rounded-sm"
+                      aria-invalid={fieldState.invalid}
+                    />
 
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-             <Controller
-              name={"poster"}
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel>URL Poster</FieldLabel>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+              <Controller
+                name={"poster"}
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>URL Poster</FieldLabel>
 
-                  <Input
-                    {...field}
-                    type="url"
-                    placeholder="https://example.com/"
-                    className="rounded-sm"
-                    aria-invalid={fieldState.invalid}
-                  />
+                    <Input
+                      {...field}
+                      type="url"
+                      placeholder="https://example.com/"
+                      className="rounded-sm"
+                      aria-invalid={fieldState.invalid}
+                    />
 
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+              <Controller
+                name="status"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Status</FieldLabel>
+
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) =>
+                        field.onChange(value as "publish" | "draft")
+                      }
+                    >
+                      <SelectTrigger
+                        className="rounded-sm"
+                        aria-invalid={fieldState.invalid}
+                      >
+                        <SelectValue placeholder="Pilih status" />
+                      </SelectTrigger>
+
+                      <SelectContent className="rounded-sm">
+                        <SelectItem value="publish" className="rounded-sm">
+                          Publish
+                        </SelectItem>
+
+                        <SelectItem value="draft" className="rounded-sm">
+                          Draft
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
             </div>
+
             <Controller
               name="metaDescription"
               control={form.control}

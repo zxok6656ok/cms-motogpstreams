@@ -1,11 +1,11 @@
-import Hero from "@/components/hero";
 import { getArticles } from "../../../lib/article";
 import { ArticleCard } from "./components/article-card";
 import { ArticlePagination } from "./components/article-pagination";
-import { getSiteSetting } from "../../../lib/site";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Search } from "lucide-react";
+import Hero from "@/components/hero";
+import { getSiteSetting } from "../../../lib/site";
 
 type HomePageProps = {
   searchParams: Promise<{
@@ -15,22 +15,17 @@ type HomePageProps = {
 };
 
 export default async function HomePage({ searchParams }: HomePageProps) {
-  const site = await getSiteSetting();
   const params = await searchParams;
 
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
 
   const search = (params.q ?? "").trim();
 
-  const { articles, currentPage, totalPages, total } = await getArticles(
-    page,
-    search,
-  );
-
+  const [site, { articles, currentPage, totalPages, total }] =
+    await Promise.all([getSiteSetting(), getArticles(page, search)]);
   return (
     <div className="w-full ">
       <Hero site={site} />
-
       <main className="mx-auto max-w-6xl px-2  py-2">
         <section className="border-b-4 border-black mx-2 py-2">
           <div className="mx-auto max-w-6xl">

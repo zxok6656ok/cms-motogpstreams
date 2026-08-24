@@ -5,6 +5,9 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Prisma } from "@/generated/prisma/client";
 import { getSiteSetting } from "../../../lib/site";
+import Hero from "@/components/hero";
+import { getAds } from "../../../lib/ads";
+import AdsSection from "@/components/ads/after-hero";
 
 export type Site = Prisma.SiteSettingGetPayload<{
   include: {
@@ -85,33 +88,57 @@ export default async function PublicLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const site = await getSiteSetting();
+  const [site, ads] = await Promise.all([getSiteSetting(), getAds()]);
 
   return (
     <>
+      {/* Google Analytics */}
+      <Script
+        src="https://www.googletagmanager.com/gtag/js?id=G-G3KNCQ8N7G"
+        strategy="afterInteractive"
+      />
+
+      <Script id="google-analytics" strategy="afterInteractive">
+        {`
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){window.dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-G3KNCQ8N7G');
+      `}
+      </Script>
+
+      {/* Google Site Verification */}
       <meta
         name="google-site-verification"
         content="xVjUOmyMEh47V9G9RsUsjdBI1_TsLi8zG1qkIXS--kU"
       />
-      {site.adLinks
-        .filter((ad) => ad.position === "head")
-        .map((ad) => (
-          <Script key={ad.id} src={ad.url} strategy="beforeInteractive" />
-        ))}
 
-      <div className="m-0 p-0 w-full">
+      {process.env.VERCEL_ENV === "production" &&
+        site.adLinks
+          .filter((ad) => ad.position === "head" && ad.isActive)
+          .map((ad) => (
+            <Script key={ad.id} src={ad.url} strategy="lazyOnload" />
+          ))}
+
+      <div className="m-0 w-full p-0">
         <Navbar site={site} />
-
+       
+        {process.env.VERCEL_ENV === "production" && (
+          <AdsSection ads={ads} position="head" />
+        )}
         {children}
-
+        {process.env.VERCEL_ENV === "production" && (
+          <AdsSection ads={ads} position="body" />
+        )}
         <Footer site={site} />
       </div>
 
-      {site.adLinks
-        .filter((ad) => ad.position === "body")
-        .map((ad) => (
-          <Script key={ad.id} src={ad.url} strategy="afterInteractive" />
-        ))}
+      {process.env.VERCEL_ENV === "production" &&
+        site.adLinks
+          .filter((ad) => ad.position === "body" && ad.isActive)
+          .map((ad) => (
+            <Script key={ad.id} src={ad.url} strategy="lazyOnload" />
+          ))}
     </>
   );
 }

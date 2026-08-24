@@ -1,4 +1,5 @@
 "use client";
+
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/ui/button";
 import { RowSelectionState } from "@tanstack/react-table";
@@ -7,19 +8,20 @@ import { useState } from "react";
 type DeleteProps = {
   open: boolean;
   setOpen: (open: boolean) => void;
-  title: string | undefined;
-  id: string | undefined;
-  ids?: string[];
   type: "single" | "many";
+  name?: string;
+  id?: string;
+  ids?: string[];
   onDelete: (id: string) => Promise<void>;
   onDeleteMany: (ids: string[]) => Promise<void>;
   setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>;
 };
+
 const Delete = ({
   open,
   setOpen,
-  title,
+  name,
   id,
   type,
   ids = [],
@@ -29,6 +31,7 @@ const Delete = ({
   setSelectedIds,
 }: DeleteProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
+
   const handleDelete = async () => {
     if (isDeleting) return;
 
@@ -41,6 +44,7 @@ const Delete = ({
         await onDelete(id);
       } else {
         if (ids.length === 0) return;
+
         await onDeleteMany(ids);
       }
 
@@ -49,15 +53,21 @@ const Delete = ({
       setIsDeleting(false);
     }
   };
+
   const isDisabled = isDeleting || (type === "single" ? !id : ids.length === 0);
+
   return (
     <Modal
       open={open}
-      onOpenChange={setOpen}
-      title="Delete Post"
-      className="rounded-sm w-sm"
+      onOpenChange={(value) => {
+        if (!isDeleting) {
+          setOpen(value);
+        }
+      }}
+      title={type === "single" ? "Delete Widget" : "Delete Widgets"}
+      className="w-full max-w-sm rounded-sm"
       footer={
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 w-full">
+        <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
           <Button
             type="button"
             variant="destructive"
@@ -87,12 +97,13 @@ const Delete = ({
       {type === "single" ? (
         <div className="text-sm">
           This will permanently delete{" "}
-          <span className="font-medium text-red-500">&quot;{title}&quot;</span>.
+          <span className="font-medium text-red-500">&quot;{name}&quot;</span>.
         </div>
       ) : (
         <div className="text-sm">
           This will permanently delete{" "}
-          <span className="font-medium text-red-500">{ids.length} posts</span>.
+          <span className="font-medium text-red-500">{ids.length} widgets</span>
+          .
         </div>
       )}
     </Modal>

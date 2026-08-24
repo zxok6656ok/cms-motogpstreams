@@ -5,6 +5,7 @@ import { DataTable } from "@/components/data-table";
 
 import { getColumns } from "./columns";
 import type { User } from "@supabase/supabase-js";
+import { RowSelectionState } from "@tanstack/react-table";
 
 export type AuthUser = User;
 
@@ -29,6 +30,7 @@ export default function Table({
   const [openModalView, setOpenModalView] = useState(false);
   const [openModalDelete, setOpenModalDelete] = useState(false);
 
+
   const [user, setUser] = useState<AuthUser | null>(null);
 
   const columns = getColumns({
@@ -41,9 +43,7 @@ export default function Table({
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Users
-        </h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
 
         <p className="text-sm text-muted-foreground">
           Manage authenticated users.
@@ -60,10 +60,6 @@ export default function Table({
         searchKey={search}
         searchPlaceholder="Search users..."
       />
-
-      {/* Modal edit */}
-      {/* Modal view */}
-      {/* Modal delete */}
     </div>
   );
 }

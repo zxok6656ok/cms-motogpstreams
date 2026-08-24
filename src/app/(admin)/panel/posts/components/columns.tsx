@@ -2,7 +2,11 @@
 
 import { MoreHorizontal } from "lucide-react";
 
-import type { Column, ColumnDef } from "@tanstack/react-table";
+import type {
+  Column,
+  ColumnDef,
+  RowSelectionState,
+} from "@tanstack/react-table";
 import { format, formatDistanceToNow } from "date-fns";
 import { id } from "date-fns/locale";
 
@@ -21,7 +25,7 @@ import { SortableColumn } from "@/components/sortable-column";
 import { tableFeaturesConfig } from "@/lib/table-features";
 
 import type { Prisma } from "@/generated/prisma/client";
-import { CopyButton } from "@/components/copy-button";
+
 import Image from "next/image";
 
 export type Article = Prisma.ArticleGetPayload<{
@@ -57,6 +61,9 @@ type PostsTableAction = {
   onView: (props: boolean) => void;
   onDelete: (props: boolean) => void;
   setArticle: (props: Article) => void;
+  setTypeDelete: (type: "single" | "many") => void;
+  setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
+  setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>;
 };
 
 export const getColumns = ({
@@ -65,6 +72,9 @@ export const getColumns = ({
   onDelete,
   setArticle,
   setType,
+  setSelectedIds,
+  setTypeDelete,
+  setRowSelection,
 }: PostsTableAction): ColumnDef<typeof tableFeaturesConfig, Article>[] => [
   {
     id: "select",
@@ -77,6 +87,22 @@ export const getColumns = ({
         checked={table.getIsAllPageRowsSelected()}
         onCheckedChange={(checked) => {
           table.toggleAllPageRowsSelected(checked === true);
+
+          const pageRows = table.getRowModel().rows;
+
+          setSelectedIds((prev) => {
+            if (checked === true) {
+              const newIds = pageRows
+                .filter((row) => row.getCanSelect())
+                .map((row) => row.original.id);
+
+              return Array.from(new Set([...prev, ...newIds]));
+            }
+
+            const pageIds = new Set(pageRows.map((row) => row.original.id));
+
+            return prev.filter((id) => !pageIds.has(id));
+          });
         }}
         aria-label="Select all"
       />
@@ -88,6 +114,14 @@ export const getColumns = ({
         disabled={!row.getCanSelect()}
         onCheckedChange={(checked) => {
           row.toggleSelected(checked === true);
+
+          setSelectedIds((prev) => {
+            if (checked === true) {
+              return [...prev, row.original.id];
+            }
+
+            return prev.filter((id) => id !== row.original.id);
+          });
         }}
         aria-label="Select row"
       />
@@ -159,7 +193,6 @@ export const getColumns = ({
       </div>
     ),
   },
-  
 
   {
     accessorKey: "categories",
@@ -173,43 +206,25 @@ export const getColumns = ({
     },
   },
 
-  // {
-  //   accessorKey: "status",
-
-  //   header: "Status",
-
-  //   cell: ({ row }) => {
-  //     const status = row.getValue("status") as Article["status"];
-
-  //     return (
-  //       <span
-  //         className={
-  //           status === "Published"
-  //             ? "inline-flex rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400"
-  //             : "inline-flex rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-  //         }
-  //       >
-  //         {status}
-  //       </span>
-  //     );
-  //   },
-  // },
-
   {
-    accessorKey: "slug",
+    accessorKey: "status",
 
-    header: ({ column }) => <PostSortableColumn column={column} title="Slug" />,
-  },
+    header: "Status",
 
-  {
-    accessorKey: "updatedAt",
-
-    header: ({ column }) => <PostSortableColumn column={column} title="Date" />,
     cell: ({ row }) => {
-      return formatDistanceToNow(row.original.updatedAt, {
-        addSuffix: true,
-        locale: id,
-      });
+      const status = row.getValue("status") as Article["status"];
+
+      return (
+        <span
+          className={
+            status === "publish"
+              ? "inline-flex rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400"
+              : "inline-flex rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+          }
+        >
+          {status}
+        </span>
+      );
     },
   },
 
@@ -256,6 +271,14 @@ export const getColumns = ({
             <DropdownMenuItem
               onClick={() => {
                 setArticle(row.original);
+                onView(true);
+              }}
+            >
+              View
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setArticle(row.original);
                 onEdit(true);
                 setType("edit");
               }}
@@ -263,21 +286,14 @@ export const getColumns = ({
               Edit
             </DropdownMenuItem>
 
-            <DropdownMenuItem
-              onClick={() => {
-                setArticle(row.original);
-
-                onView(true);
-              }}
-            >
-              View
-            </DropdownMenuItem>
-
             <DropdownMenuSeparator />
 
             <DropdownMenuItem
               className="text-destructive"
               onClick={() => {
+                setSelectedIds([]);
+                setRowSelection({});
+                setTypeDelete("single");
                 setArticle(row.original);
                 onDelete(true);
               }}

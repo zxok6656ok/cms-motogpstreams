@@ -3,7 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { useTable, type ColumnDef, type RowData } from "@tanstack/react-table";
+import {
+  useTable,
+  type ColumnDef,
+  type RowData,
+  type RowSelectionState,
+  type OnChangeFn,
+} from "@tanstack/react-table";
 
 import { Search } from "lucide-react";
 
@@ -31,6 +37,8 @@ interface DataTableProps<TData extends RowData> {
 
   searchKey?: string;
   searchPlaceholder?: string;
+  rowSelection?: RowSelectionState;
+  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
 }
 
 export function DataTable<TData extends RowData>({
@@ -42,6 +50,8 @@ export function DataTable<TData extends RowData>({
   total,
   searchKey = "",
   searchPlaceholder = "Search...",
+  rowSelection,
+  onRowSelectionChange,
 }: DataTableProps<TData>) {
   const slugTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
@@ -77,7 +87,9 @@ export function DataTable<TData extends RowData>({
         pageIndex: page - 1,
         pageSize,
       },
+      rowSelection,
     },
+    onRowSelectionChange,
   });
 
   const goToPage = (newPage: number) => {
