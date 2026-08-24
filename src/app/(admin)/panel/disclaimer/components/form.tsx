@@ -13,7 +13,16 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { updatePage } from "../action";
 
-type Page = Prisma.PageGetPayload<{}>;
+type Page = Prisma.PageGetPayload<{
+  select: {
+    title: true;
+    id: true;
+    createdAt: true;
+    updatedAt: true;
+    content: true;
+    slug: true;
+  };
+}>;
 
 interface PageFormProps {
   page: Page | null;
@@ -22,23 +31,13 @@ interface PageFormProps {
 export function PageForm({ page }: PageFormProps) {
   return (
     <form action={updatePage}>
-      <input
-        type="hidden"
-        name="id"
-        value={page?.id}
-      />
+      <input type="hidden" name="id" value={page?.id} />
 
-      <input
-        type="hidden"
-        name="slug"
-        value={page?.slug}
-      />
+      <input type="hidden" name="slug" value={page?.slug} />
 
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="title">
-            Title
-          </FieldLabel>
+          <FieldLabel htmlFor="title">Title</FieldLabel>
 
           <Input
             id="title"
@@ -50,28 +49,21 @@ export function PageForm({ page }: PageFormProps) {
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="content">
-            Content
-          </FieldLabel>
+          <FieldLabel htmlFor="content">Content</FieldLabel>
 
-          <FieldDescription>
-            Content halaman.
-          </FieldDescription>
+          <FieldDescription>Content halaman.</FieldDescription>
 
           <Textarea
             id="content"
             name="content"
             defaultValue={page?.content}
             className="min-h-125 rounded-sm"
-            
             required
           />
         </Field>
 
         <div className="flex justify-end">
-          <Button type="submit">
-            Save Changes
-          </Button>
+          <Button type="submit">Save Changes</Button>
         </div>
       </FieldGroup>
     </form>

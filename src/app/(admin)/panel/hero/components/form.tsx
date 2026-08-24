@@ -127,7 +127,7 @@ export default function HeroForm({ defaultValues, hero }: HeroFormProps) {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="p-6">
+        <div className="p-0">
           <div className="mb-6">
             <h2 className="text-xl font-semibold">Hero Content</h2>
 
