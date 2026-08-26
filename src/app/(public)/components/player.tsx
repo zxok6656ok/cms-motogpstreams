@@ -41,23 +41,25 @@ export default function Player({
     <section className="mx-auto mb-5 w-full max-w-6xl px-4 py-7 ">
       <h2
         className="
-              mb-1
-              min-h-14
-              line-clamp-2
-              text-xl
-              font-black
-              leading-tight
-              tracking-tight
-              sm:text-2xl
-              flex gap-1 items-start sm:items-center
-            "
+    mb-1
+    flex
+    min-h-14
+    items-start
+    gap-1
+    text-xl
+    font-black
+    leading-tight
+    tracking-tight
+    sm:items-center
+    sm:text-2xl
+  "
       >
-        <TextIcon />
+        <TextIcon className="w-6" />
         {posts.title}
       </h2>
       <div className="flex gap-3 items-start sm:items-center mb-2">
         <div className="flex gap-1 items-center mb-2">
-          <Calendar className="w-5 h-5"/>
+          <Calendar className="w-5 h-5" />
           <time
             dateTime={createdAt.toISOString()}
             className="text-xs font-black uppercase"

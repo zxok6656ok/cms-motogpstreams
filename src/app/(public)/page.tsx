@@ -31,8 +31,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <div className="mx-auto max-w-6xl">
             <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
               <div>
-                <h1 className="mt-2 text-2xl font-black tracking-tighter md:text-4xl flex gap-1 items-center">
-                  <List /> News
+                <h1 className="mt-2 flex items-center gap-1 text-2xl font-black tracking-tighter md:text-4xl">
+                  <List className="size-[1em]" />
+                  News
                 </h1>
               </div>
 
