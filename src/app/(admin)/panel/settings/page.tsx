@@ -1,4 +1,3 @@
-
 import SiteSettingForm from "./components/form";
 import { Prisma } from "@/generated/prisma/client";
 import prisma from "../../../../../lib/prisma";
@@ -13,7 +12,7 @@ export type SiteSetting = Prisma.SiteSettingGetPayload<{
     footerItems: true;
     navbarItems: true;
     socialLinks: true;
-    adLinks: true
+    adLinks: true;
   };
 }>;
 const page = async () => {
@@ -22,7 +21,7 @@ const page = async () => {
       footerItems: true,
       navbarItems: true,
       socialLinks: true,
-      adLinks: true
+      adLinks: true,
     },
   });
   return (

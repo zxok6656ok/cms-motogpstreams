@@ -188,9 +188,7 @@ export function Navbar({ site }: { site: Site }) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
           className="
-            mx-1
-            max-w-xl
-            rounded-none
+            w-[calc(100vw-1rem)] max-w-2xl rounded-sm sm:w-full
             border-2 border-black
             bg-[#FFFDF5]
             shadow-[6px_6px_0px_0px_#000]
@@ -216,7 +214,7 @@ export function Navbar({ site }: { site: Site }) {
                 router.push(`/?q=${encodeURIComponent(query)}`);
                 setOpen(false);
               }}
-              className="flex gap-2"
+              className="flex flex-col gap-2 sm:flex-row"
             >
               <input
                 autoFocus
@@ -225,7 +223,7 @@ export function Navbar({ site }: { site: Site }) {
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Cari live streaming motogp..."
                 className="
-      h-12 flex-1
+      h-12 w-full
       border-2 border-black
       bg-white
       px-4
@@ -233,13 +231,14 @@ export function Navbar({ site }: { site: Site }) {
       outline-none
       placeholder:text-slate-700
       focus:bg-[#4d7aff]
+      sm:flex-1
     "
               />
 
               <Button
                 type="submit"
                 className="
-      h-12
+      h-12 w-full
       rounded-none
       border-2 border-black
       bg-[#4d7aff]
@@ -252,6 +251,7 @@ export function Navbar({ site }: { site: Site }) {
       hover:translate-y-0.5
       hover:bg-[#4d7aff]
       hover:shadow-none
+      sm:w-auto
     "
               >
                 Search

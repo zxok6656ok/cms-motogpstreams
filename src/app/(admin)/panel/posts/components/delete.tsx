@@ -55,7 +55,7 @@ const Delete = ({
       open={open}
       onOpenChange={setOpen}
       title="Delete Post"
-      className="rounded-sm w-sm"
+      className="w-[calc(100vw-1rem)] max-w-2xl rounded-sm sm:w-full"
       footer={
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 w-full">
           <Button

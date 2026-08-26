@@ -16,6 +16,8 @@ export type Posts = Prisma.ArticleGetPayload<{
         url: true;
         drmId: true;
         drmKey: true;
+        directLink: true;
+        directLinkActive: true;
       };
     };
     categories: {

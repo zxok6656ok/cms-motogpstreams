@@ -170,7 +170,7 @@ const FormAdsWidgets = ({ open, setOpen, ads, type }: FormAdsWidgetsProps) => {
     <Modal
       open={open}
       onOpenChange={handleOpenChange}
-      className="w-full sm:w-2xl max-w-2xl rounded-sm"
+      className="w-[calc(100vw-1rem)] max-w-2xl rounded-sm sm:w-full"
       title={type === "add" ? "Add Advertisement" : "Edit Advertisement"}
       description={
         type === "add"

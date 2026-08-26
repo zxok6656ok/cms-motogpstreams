@@ -39,7 +39,8 @@ const formSchema = z.object({
   description: z.string().optional(),
 
   siteUrl: z.string().url("Invalid URL.").optional().or(z.literal("")),
-
+  googleAnalyticsId: z.string().optional(),
+  googleSiteVerification: z.string().optional(),
   logo: z.string().optional(),
   favicon: z.string().optional(),
   ogImage: z.string().optional(),
@@ -117,7 +118,8 @@ const SiteSettingForm = ({ site }: SiteSettingFormProps) => {
       title: site?.title ?? "",
       description: site?.description ?? "",
       siteUrl: site?.siteUrl ?? "",
-
+      googleAnalyticsId: site?.googleAnalyticsId ?? "",
+      googleSiteVerification: site?.googleSiteVerification ?? "",
       logo: site?.logo ?? "",
       favicon: site?.favicon ?? "",
       ogImage: site?.ogImage ?? "",
@@ -215,6 +217,11 @@ const SiteSettingForm = ({ site }: SiteSettingFormProps) => {
       formData.append("siteName", data.siteName);
       formData.append("title", data.title);
       formData.append("description", data.description ?? "");
+      formData.append("googleAnalyticsId", data.googleAnalyticsId ?? "");
+      formData.append(
+        "googleSiteVerification",
+        data.googleSiteVerification ?? "",
+      );
       formData.append("siteUrl", data.siteUrl ?? "");
 
       formData.append("logo", data.logo ?? "");
@@ -681,7 +688,7 @@ const SiteSettingForm = ({ site }: SiteSettingFormProps) => {
         <div className="space-y-3">
           {navbarFields.map((item, index) => (
             <div key={item.id} className="rounded-lg border p-3">
-              <div className="flex items-center gap-3">
+              <div className="flex items-start sm:items-center flex-col sm:flex-row gap-3">
                 <span className="w-6 text-sm text-muted-foreground">
                   {index + 1}
                 </span>
@@ -773,7 +780,7 @@ const SiteSettingForm = ({ site }: SiteSettingFormProps) => {
         <div className="space-y-3">
           {footerFields.map((item, index) => (
             <div key={item.id} className="rounded-lg border p-3">
-              <div className="flex items-center gap-3">
+              <div className="flex items-start sm:items-center flex-col sm:flex-row gap-3">
                 <span className="w-6 text-sm text-muted-foreground">
                   {index + 1}
                 </span>
@@ -965,7 +972,7 @@ const SiteSettingForm = ({ site }: SiteSettingFormProps) => {
         <div className="space-y-3">
           {adFields.map((item, index) => (
             <div key={item.id} className="rounded-lg border p-3">
-              <div className="flex items-end gap-3">
+              <div className="flex items-start sm:items-center flex-col sm:flex-row gap-3">
                 <span className="mb-2 w-6 text-sm text-muted-foreground">
                   {index + 1}
                 </span>
@@ -1068,6 +1075,49 @@ const SiteSettingForm = ({ site }: SiteSettingFormProps) => {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="space-y-3">
+          <Controller
+            name={`googleAnalyticsId`}
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field className="flex-1" data-invalid={fieldState.invalid}>
+                <FieldLabel>Code Google Analytics Id</FieldLabel>
+
+                <Input
+                  {...field}
+                  placeholder="Analytics Id"
+                  className="rounded-sm"
+                  aria-invalid={fieldState.invalid}
+                />
+
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+          <Controller
+            name={`googleSiteVerification`}
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field className="flex-1" data-invalid={fieldState.invalid}>
+                <FieldLabel>Code Google Site Verification</FieldLabel>
+
+                <Input
+                  {...field}
+                  placeholder="Site Verification"
+                  className="rounded-sm"
+                  aria-invalid={fieldState.invalid}
+                />
+
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
         </div>
 
         <div className="pt-4">

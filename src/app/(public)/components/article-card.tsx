@@ -1,4 +1,4 @@
-import { Calendar, PlayIcon } from "lucide-react";
+import { Calendar, PlayIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
@@ -12,6 +12,7 @@ type ArticleCardProps = {
     slug: string;
     metaDescription: string | null;
     createdAt: Date;
+    uploadBy: string;
     categories: {
       name: string;
       slug: string;
@@ -96,25 +97,34 @@ export function ArticleCard({ article }: ArticleCardProps) {
               </p>
             )}
 
-            <div className="mt-auto flex items-center justify-between gap-3 pt-6">
-              <div className="flex gap-1 items-center">
-                <Calendar />
-                <time
-                  dateTime={createdAt.toISOString()}
-                  className="text-xs font-black uppercase"
-                >
-                  {format(createdAt, "dd MMM yyyy", {
-                    locale: id,
-                  })}
-                </time>
+            <div className="mt-auto">
+              <div className="flex gap-1 items-center  pt-6">
+                <UserIcon className="w-5 h-5" />
+                <span className="text-xs font-black uppercase">
+                  {article.uploadBy}
+                </span>
               </div>
-              <Link href={articleUrl}>
-                <span
-                  className="
+              <div className="mt-auto flex items-center justify-between gap-3 pt-1">
+                <div className="flex gap-1 items-center">
+                  <Calendar />
+                  <time
+                    dateTime={createdAt.toISOString()}
+                    className="text-xs font-black uppercase"
+                  >
+                    {format(createdAt, "dd MMM yyyy", {
+                      locale: id,
+                    })}
+                  </time>
+                </div>
+
+                <Link href={articleUrl}>
+                  <span
+                    className="
                 flex items-center gap-2
                 border-2 border-black
                 bg-black
-                px-3 py-2
+                px-3  py-2
+                
                 text-xs
                 font-black
                 uppercase
@@ -122,11 +132,12 @@ export function ArticleCard({ article }: ArticleCardProps) {
                 group-hover:bg-[#dfff00]
                 group-hover:text-black
               "
-                >
-                  Tonton
-                  <PlayIcon className="h-5 w-5" />
-                </span>
-              </Link>
+                  >
+                    Play
+                    <PlayIcon className="h-5 w-5" />
+                  </span>
+                </Link>
+              </div>
             </div>
           </div>
         </div>

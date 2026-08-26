@@ -3,6 +3,7 @@ import { ArrowRight, Radio } from "lucide-react";
 import { Site } from "@/app/(public)/layout";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { SiTelegram } from "react-icons/si";
 
 const Hero = ({ site }: { site: Site }) => {
   const hero = site.hero;
@@ -16,7 +17,7 @@ const Hero = ({ site }: { site: Site }) => {
           <div className="relative">
             <div className="mb-8 inline-flex items-center gap-2 border-3 border-black bg-[#dfff00] px-4 py-2 font-mono text-xs font-black uppercase tracking-wider shadow-[5px_5px_0_#000]">
               <Radio className="size-4" strokeWidth={3} />
-             { hero.badge }
+              {hero.badge}
             </div>
 
             <h1 className="text-[clamp(4rem,10vw,8rem)] font-black uppercase leading-[0.78] tracking-[-0.075em]">
@@ -44,25 +45,25 @@ const Hero = ({ site }: { site: Site }) => {
               </p>
             </div>
             <div className="mt-8 flex flex-wrap gap-5">
-              <Link href={hero.primaryButtonUrl ?? "/"} >
-              <Button
-              
-                size="lg"
-                className="h-14 rounded-none border-3 border-black bg-[#4d7aff] px-7 font-black uppercase text-black shadow-[7px_7px_0_#000] transition-none hover:translate-x-1 hover:translate-y-1 hover:bg-[#4d7aff] hover:shadow-[3px_3px_0_#000]"
-              >
-                {  hero.primaryButtonText }
-                <ArrowRight className="ml-2 size-5" strokeWidth={3} />
-              </Button>
+              <Link href={hero.primaryButtonUrl ?? "/"}>
+                <Button
+                  size="lg"
+                  className="h-14 rounded-none border-3 border-black bg-[#4d7aff] px-7 font-black uppercase text-black shadow-[7px_7px_0_#000] transition-none hover:translate-x-1 hover:translate-y-1 hover:bg-[#4d7aff] hover:shadow-[3px_3px_0_#000]"
+                >
+                  {hero.primaryButtonText}
+                  <ArrowRight className="ml-2 size-5" strokeWidth={3} />
+                </Button>
               </Link>
 
-              <Link href={hero.secondaryButtonUrl ?? "/"} >
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-14 rounded-none border-3 border-black bg-white px-7 font-black uppercase text-black shadow-[7px_7px_0_#000] transition-none hover:translate-x-1 hover:translate-y-1 hover:bg-white hover:shadow-[3px_3px_0_#000]"
-              >
-                { hero.secondaryButtonText}
-              </Button>
+              <Link href={hero.secondaryButtonUrl ?? "/"}>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-14 rounded-none border-3 border-black bg-white px-7 font-black uppercase text-black shadow-[7px_7px_0_#000] transition-none hover:translate-x-1 hover:translate-y-1 hover:bg-white hover:shadow-[3px_3px_0_#000]"
+                >
+                  {hero.secondaryButtonText}
+                  <SiTelegram />
+                </Button>
               </Link>
             </div>
           </div>

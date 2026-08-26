@@ -3,7 +3,7 @@ import { ArticleCard } from "./components/article-card";
 import { ArticlePagination } from "./components/article-pagination";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { List, Search } from "lucide-react";
 import Hero from "@/components/hero";
 import { getSiteSetting } from "../../../lib/site";
 
@@ -20,19 +20,19 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
 
   const search = (params.q ?? "").trim();
-
+  const isSearching = search.length > 0;
   const [site, { articles, currentPage, totalPages, total }] =
     await Promise.all([getSiteSetting(), getArticles(page, search)]);
   return (
     <div className="w-full ">
-      <Hero site={site} />
+      {!isSearching && <Hero site={site} />}
       <main className="mx-auto max-w-6xl px-2  py-2">
         <section className="border-b-4 border-black mx-2 py-2">
           <div className="mx-auto max-w-6xl">
             <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
               <div>
-                <h1 className="mt-2 text-2xl font-black tracking-tighter md:text-4xl">
-                  News
+                <h1 className="mt-2 text-2xl font-black tracking-tighter md:text-4xl flex gap-1 items-center">
+                  <List /> News
                 </h1>
               </div>
 
@@ -41,7 +41,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   <div className="flex items-center gap-2 border-2 border-black bg-white px-3 py-1 font-bold shadow-[3px_3px_0px_0px_#000]">
                     <Search className="size-4 shrink-0" />
 
-                    <span>Hasil pencarian:</span>
+                    <span>Search results:</span>
 
                     <span className="max-w-50 truncate  px-2 py-0">
                       {search}
@@ -54,21 +54,21 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                     <Button
                       variant="outline"
                       className="
-            rounded-none
-            border-2 border-black
-            bg-[#dfff00]
-            font-bold
-            py-2
-            
-            text-black
-            shadow-[3px_3px_0px_0px_#000]
-            transition-all
-            hover:translate-x-0.5
-            hover:translate-y-0.5
-            hover:bg-[#4d7aff]
-            hover:text-black
-            hover:shadow-none
-          "
+                        rounded-none
+                        border-2 border-black
+                        bg-[#dfff00]
+                        font-bold
+                        py-2
+                        
+                        text-black
+                        shadow-[3px_3px_0px_0px_#000]
+                        transition-all
+                        hover:translate-x-0.5
+                        hover:translate-y-0.5
+                        hover:bg-[#4d7aff]
+                        hover:text-black
+                        hover:shadow-none
+                      "
                     >
                       Reset
                     </Button>
@@ -83,7 +83,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <div className="mx-auto max-w-7xl">
             {search && (
               <div className="mb-8 border-4 border-black bg-[#ffde59] p-4 font-black shadow-[5px_5px_0_#000]">
-                HASIL PENCARIAN: `&quot;`{search}`&quot;`
+                SEARCH RESULTS: &quot;{search}&quot;
                 <span className="ml-2">({total})</span>
               </div>
             )}
@@ -104,7 +104,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               </>
             ) : (
               <div className="border-4 border-black bg-white p-12 text-center font-black shadow-[7px_7px_0_#000]">
-                ARTIKEL TIDAK DITEMUKAN
+                ARTICLE NOT FOUND
               </div>
             )}
           </div>

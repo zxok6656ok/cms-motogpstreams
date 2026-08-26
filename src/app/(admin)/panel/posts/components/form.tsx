@@ -4,6 +4,7 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 import * as z from "zod";
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/client";
 import {
   Field,
   FieldDescription,
@@ -22,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import createSlug from "../../../../../../lib/create-slug";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Article } from "./columns";
 import { saveArticle } from "../action";
 import { toast } from "@/components/ui/toast";
@@ -43,7 +44,10 @@ const formSchema = z.object({
       /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
       "Slug can only contain lowercase letters, numbers, and hyphens.",
     ),
-
+  uploadBy: z
+    .string()
+    .min(1, "Upload By must be at least 1 characters.")
+    .max(10, "Upload By must be at most 10 characters."),
   metaDescription: z
     .string()
     .max(160, "Meta description must be at most 160 characters.")
@@ -58,6 +62,8 @@ const formSchema = z.object({
       url: z.string(),
       drmId: z.string().optional(),
       drmKey: z.string().optional(),
+      directLink: z.string().optional(),
+      directLinkActive: z.boolean(),
     }),
   ),
 
@@ -72,6 +78,7 @@ type FormPostsProps = {
 const FormPosts = ({ open, setOpen, article, type }: FormPostsProps) => {
   const slugTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
+  const [uploadBy, setUploadBy] = useState<string>("");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -82,6 +89,7 @@ const FormPosts = ({ open, setOpen, article, type }: FormPostsProps) => {
       slug: "",
       metaDescription: "",
       status: "publish",
+      uploadBy: uploadBy,
       categories: "",
       streams: [
         {
@@ -90,6 +98,8 @@ const FormPosts = ({ open, setOpen, article, type }: FormPostsProps) => {
           url: "",
           drmId: "",
           drmKey: "",
+          directLink: "",
+          directLinkActive: false,
         },
       ],
       content: "",
@@ -114,7 +124,9 @@ const FormPosts = ({ open, setOpen, article, type }: FormPostsProps) => {
       const formData = new FormData();
 
       formData.append("title", data.title);
+      formData.append("uploadBy", data.uploadBy);
       formData.append("thumbnail", data.thumbnail);
+
       formData.append("poster", data.poster ?? "");
       formData.append("slug", data.slug);
       formData.append("metaDescription", data.metaDescription ?? "");
@@ -158,6 +170,7 @@ const FormPosts = ({ open, setOpen, article, type }: FormPostsProps) => {
     slug: "",
     metaDescription: "",
     status: "publish" as const,
+    uploadBy: uploadBy,
     categories: "",
     streams: [
       {
@@ -166,6 +179,8 @@ const FormPosts = ({ open, setOpen, article, type }: FormPostsProps) => {
         url: "",
         drmId: "",
         drmKey: "",
+        directLink: "",
+        directLinkActive: false,
       },
     ],
     content: "",
@@ -189,6 +204,7 @@ const FormPosts = ({ open, setOpen, article, type }: FormPostsProps) => {
         thumbnail: article.thumbnail ?? "",
         poster: article.poster ?? "",
         status: article.status ?? "publish",
+        uploadBy: article.uploadBy ?? uploadBy,
         metaDescription: article.metaDescription ?? "",
         categories:
           article.categories?.map((category) => category.name).join(", ") ?? "",
@@ -199,17 +215,33 @@ const FormPosts = ({ open, setOpen, article, type }: FormPostsProps) => {
             url: stream.url,
             drmId: stream.drmId ?? "",
             drmKey: stream.drmKey ?? "",
+            directLink: stream.directLink ?? "",
+            directLinkActive: stream.directLinkActive ?? false,
           })) ?? defaultValues.streams,
         content: article.content ?? "",
       });
     }
   }, [open, type, article, form]);
+
+  useEffect(() => {
+    async function getProfile() {
+      const supabase = createClient();
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) setUploadBy(user.user_metadata?.display_name ?? "X");
+    }
+
+    getProfile();
+  }, [form]);
   return (
     <div>
       <Modal
         open={open}
         onOpenChange={setOpen}
-        className="rounded-sm w-full sm:w-2xl max-w-2xl"
+        className="w-[calc(100vw-1rem)] max-w-2xl rounded-sm sm:w-full"
         title="Add Post"
         description=""
         footer={
@@ -388,6 +420,30 @@ const FormPosts = ({ open, setOpen, article, type }: FormPostsProps) => {
                   </Field>
                 )}
               />
+              <Controller
+                name="uploadBy"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="article-form-upload-by">
+                      Upload By
+                    </FieldLabel>
+
+                    <Input
+                      {...field}
+                      id="article-form-upload-by"
+                      aria-invalid={fieldState.invalid}
+                      className="rounded-sm"
+                      placeholder="X"
+                      autoComplete="off"
+                    />
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
             </div>
 
             <Controller
@@ -439,6 +495,8 @@ const FormPosts = ({ open, setOpen, article, type }: FormPostsProps) => {
                       url: "",
                       drmId: "",
                       drmKey: "",
+                      directLinkActive: false,
+                      directLink: "",
                     })
                   }
                 >
@@ -599,6 +657,71 @@ const FormPosts = ({ open, setOpen, article, type }: FormPostsProps) => {
                         </Field>
                       )}
                     />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Controller
+                        name={`streams.${index}.directLink`}
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel>Direct Link</FieldLabel>
+
+                            <Input
+                              {...field}
+                              placeholder="Stream Direct Link"
+                              className="rounded-sm"
+                              aria-invalid={fieldState.invalid}
+                            />
+
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
+
+                      <Controller
+                        name={`streams.${index}.directLinkActive`}
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel>Status</FieldLabel>
+
+                            <Select
+                              value={field.value ? "true" : "false"}
+                              onValueChange={(value) =>
+                                field.onChange(value === "true")
+                              }
+                            >
+                              <SelectTrigger
+                                className="rounded-sm"
+                                aria-invalid={fieldState.invalid}
+                              >
+                                <SelectValue>
+                                  {field.value ? "Active" : "Non Active"}{" "}
+                                </SelectValue>
+                              </SelectTrigger>
+
+                              <SelectContent className="rounded-sm">
+                                <SelectItem value="true" className="rounded-sm">
+                                  Active
+                                </SelectItem>
+
+                                <SelectItem
+                                  value="false"
+                                  className="rounded-sm"
+                                >
+                                  Non Active
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>

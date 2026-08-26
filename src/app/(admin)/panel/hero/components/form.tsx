@@ -228,7 +228,7 @@ export default function HeroForm({ defaultValues, hero }: HeroFormProps) {
         </div>
 
         <div className="space-y-6">
-          <div className="p-6">
+          <div className="p-0">
             <div className="mb-6">
               <h2 className="text-xl font-semibold">Primary Button</h2>
 
@@ -274,7 +274,7 @@ export default function HeroForm({ defaultValues, hero }: HeroFormProps) {
             </FieldGroup>
           </div>
 
-          <div className="p-6">
+          <div className="p-0">
             <div className="mb-6">
               <h2 className="text-xl font-semibold">Secondary Button</h2>
 

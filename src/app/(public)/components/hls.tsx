@@ -25,12 +25,7 @@ type PlyrInstance = {
   destroy: () => void;
 };
 
-const HlsPlayer = ({
-  name,
-  url,
-  poster,
-  autoPlay = true,
-}: HlsProps) => {
+const HlsPlayer = ({ name, url, poster, autoPlay = true }: HlsProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
@@ -85,8 +80,8 @@ const HlsPlayer = ({
                 .map((level) => level.height)
                 .filter(
                   (height): height is number =>
-                    typeof height === "number" && height > 0
-                )
+                    typeof height === "number" && height > 0,
+                ),
             ),
           ].sort((a, b) => b - a);
 
@@ -102,7 +97,7 @@ const HlsPlayer = ({
                 if (!hls) return;
 
                 const levelIndex = hls.levels.findIndex(
-                  (level) => level.height === quality
+                  (level) => level.height === quality,
                 );
 
                 if (levelIndex !== -1) {
@@ -138,18 +133,15 @@ const HlsPlayer = ({
   }, [url, autoPlay]);
 
   return (
-    <>
-      <div className="mx-auto w-full py-1 overflow-hidden rounded-2xl bg-black">
-        <video
-          ref={videoRef}
-          title={name}
-          poster={poster}
-          playsInline
-          autoPlay={autoPlay}
-          className="block h-full w-full"
-        />
-      </div>
-
+    <div className="mx-auto w-full p-0 sm:py-1 m-0  overflow-hidden rounded-none ">
+      <video
+        ref={videoRef}
+        title={name}
+        poster={poster}
+        playsInline
+        autoPlay={autoPlay}
+        className="block h-full w-full p-0 m-0"
+      />
       <style jsx global>{`
         .plyr {
           width: 100%;
@@ -162,7 +154,7 @@ const HlsPlayer = ({
           object-fit: contain;
         }
       `}</style>
-    </>
+    </div>
   );
 };
 

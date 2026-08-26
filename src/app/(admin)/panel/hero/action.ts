@@ -8,10 +8,7 @@ export const heroSave = async (data: FormData) => {
     const site = await prisma.siteSetting.findFirst();
 
     if (!site) {
-      return {
-        success: false,
-        message: "Site setting not found.",
-      };
+      throw new Error("Site setting not found.");
     }
 
     const badge = data.get("badge")?.toString() ?? "";
@@ -30,10 +27,7 @@ export const heroSave = async (data: FormData) => {
     const secondaryButtonUrl = data.get("secondaryButtonUrl")?.toString() ?? "";
 
     if (!site.id) {
-      return {
-        success: false,
-        message: "Site ID is required.",
-      };
+      throw new Error("Site ID is required.");
     }
 
     await prisma.heroSetting.upsert({
@@ -66,16 +60,12 @@ export const heroSave = async (data: FormData) => {
         secondaryButtonUrl,
       },
     });
-    updateTag("site-setting")
+    updateTag("site-setting");
     return {
       success: true,
       message: "The hero was successfully updated.",
     };
   } catch (error) {
-  
-    return {
-      success: false,
-      message: "Failed to save hero.",
-    };
+    throw new Error("Failed to save hero.");
   }
 };

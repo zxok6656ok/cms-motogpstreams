@@ -28,6 +28,10 @@ model SiteSetting {
   playerNoticeTitle       String?
   playerNoticeDescription String?
 
+  googleAnalyticsId     String?
+  googleSiteVerification String?
+
+
   telegramTitle       String?
   telegramDescription String?
 
@@ -175,7 +179,6 @@ enum SocialPlatform {
   pinterest
 }
 
-
 model Article {
   id             String     @id @default(uuid())
   title          String
@@ -187,6 +190,8 @@ model Article {
   content        String
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
+
+  uploadBy       String @default("X")
 
   categories     Category[]
   streams        Stream[]
@@ -219,6 +224,8 @@ model Stream {
   drmId String?
   drmKey String?
   articleId String
+  directLink String? @default("")
+  directLinkActive Boolean @default(false)
 
   article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 

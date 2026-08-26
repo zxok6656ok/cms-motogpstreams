@@ -65,7 +65,7 @@ const Delete = ({
         }
       }}
       title={type === "single" ? "Delete Widget" : "Delete Widgets"}
-      className="w-full max-w-sm rounded-sm"
+      className="w-[calc(100vw-1rem)] max-w-2xl rounded-sm sm:w-full"
       footer={
         <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
           <Button

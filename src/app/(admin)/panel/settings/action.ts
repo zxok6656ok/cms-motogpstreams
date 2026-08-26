@@ -10,6 +10,8 @@ export const saveSiteSettings = async (
   try {
     const siteName = data.get("siteName") as string;
     const title = data.get("title") as string;
+    const googleAnalyticsId = data.get("googleAnalyticsId") as string;
+    const googleSiteVerification = data.get("googleSiteVerification") as string;
     const description = data.get("description") as string;
     const siteUrl = data.get("siteUrl") as string;
 
@@ -49,6 +51,8 @@ export const saveSiteSettings = async (
         metaDescription,
         playerNoticeTitle,
         playerNoticeDescription,
+        googleSiteVerification,
+        googleAnalyticsId,
         telegramTitle,
         telegramDescription,
         socialLinks: {
@@ -119,9 +123,6 @@ export const saveSiteSettings = async (
       message: "Site settings were successfully saved.",
     };
   } catch (error) {
-    return {
-      success: false,
-      message: "Failed to save site settings.",
-    };
+    throw new Error("Failed to save site settings.");
   }
 };

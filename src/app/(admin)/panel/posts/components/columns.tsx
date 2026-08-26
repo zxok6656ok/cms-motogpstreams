@@ -200,7 +200,7 @@ export const getColumns = ({
     header: ({ column }) => (
       <PostSortableColumn column={column} title="Category" />
     ),
-    cell: ({ row, getValue }) => {
+    cell: ({ row }) => {
       const categori = row.original.categories.map((e) => e.name).join(", ");
       return <span>{categori}</span>;
     },

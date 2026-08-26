@@ -17,7 +17,7 @@ const View = ({ open, setOpen, ads }: ViewProps) => {
       open={open}
       onOpenChange={setOpen}
       title="View Advertisement"
-      className="w-full sm:w-2xl max-w-2xl rounded-sm"
+      className="w-[calc(100vw-1rem)] max-w-2xl rounded-sm sm:w-full"
     >
       <div className="max-h-[70vh] overflow-y-auto">
         <Card className="rounded-sm border-0 shadow-none">

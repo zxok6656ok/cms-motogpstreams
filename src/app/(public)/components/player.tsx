@@ -7,7 +7,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { Posts } from "../[...slug]/page";
 import Hls from "./hls";
 import Dash from "./dash";
-import { Calendar, TextIcon } from "lucide-react";
+import { Calendar, TextIcon, UserIcon } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
@@ -38,7 +38,7 @@ export default function Player({
 
   const createdAt = new Date(posts.createdAt);
   return (
-    <section className="mx-auto mb-10 w-full max-w-6xl px-4 py-6 sm:mb-20">
+    <section className="mx-auto mb-5 w-full max-w-6xl px-4 py-7 ">
       <h2
         className="
               mb-1
@@ -49,22 +49,28 @@ export default function Player({
               leading-tight
               tracking-tight
               sm:text-2xl
-              flex gap-1 items-center
+              flex gap-1 items-start sm:items-center
             "
       >
         <TextIcon />
         {posts.title}
       </h2>
-      <div className="flex gap-1 items-center mb-2">
-        <Calendar />
-        <time
-          dateTime={createdAt.toISOString()}
-          className="text-xs font-black uppercase"
-        >
-          {format(createdAt, "dd MMM yyyy", {
-            locale: id,
-          })}
-        </time>
+      <div className="flex gap-3 items-start sm:items-center mb-2">
+        <div className="flex gap-1 items-center mb-2">
+          <Calendar className="w-5 h-5"/>
+          <time
+            dateTime={createdAt.toISOString()}
+            className="text-xs font-black uppercase"
+          >
+            {format(createdAt, "dd MMM yyyy", {
+              locale: id,
+            })}
+          </time>
+        </div>
+        <div className="flex gap-1 items-center mb-2">
+          <UserIcon className="w-5 h-5" />
+          <span className="text-xs font-black uppercase">{posts.uploadBy}</span>
+        </div>
       </div>
       <div
         className="
@@ -72,12 +78,13 @@ export default function Player({
           border-2 border-black
           bg-black
           shadow-[6px_6px_0px_0px_#000]
+          p-0 m-0
         "
       >
-        <div className="relative aspect-video w-full p-0">
+        <div className="relative aspect-video w-full p-0 m-0 ">
           {/* player */}
           {activeStream ? (
-            <div className="flex h-full items-center justify-center p-0 text-white">
+            <div className="flex h-full items-center justify-center p-0 m-0">
               {activeStream.type == "hls" ? (
                 <Hls
                   name={activeStream.name}

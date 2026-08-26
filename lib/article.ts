@@ -87,7 +87,6 @@ export const getArticles = (page = 1, search = "") =>
     },
     ["articles", String(page), search],
     {
-      revalidate: 3600,
       tags: ["articles"],
     },
   )();
@@ -108,6 +107,8 @@ export const getArticle = (slug: string) =>
               url: true,
               drmId: true,
               drmKey: true,
+              directLink: true,
+              directLinkActive: true,
             },
           },
           categories: {

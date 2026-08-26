@@ -9,6 +9,8 @@ type StreamInput = {
   url: string;
   drmId?: string;
   drmKey?: string;
+  directLink?: string;
+  directLinkActive?: boolean;
 };
 export const deleteArticle = async (postId: string) => {
   try {
@@ -37,6 +39,7 @@ export const deleteArticle = async (postId: string) => {
 export const saveArticle = async (data: FormData, id?: string | null) => {
   try {
     const title = data.get("title") as string;
+    const uploadBy = data.get("uploadBy") as string;
     const thumbnail = data.get("thumbnail") as string;
     const poster = data.get("poster") as string;
     const slug = data.get("slug") as string;
@@ -94,6 +97,7 @@ export const saveArticle = async (data: FormData, id?: string | null) => {
           slug,
           thumbnail,
           poster,
+          uploadBy,
           metaDescription,
           content,
           status,
@@ -111,6 +115,8 @@ export const saveArticle = async (data: FormData, id?: string | null) => {
               url: stream.url,
               drmId: stream.drmId,
               drmKey: stream.drmKey,
+              directLink: stream.directLink,
+              directLinkActive: stream.directLinkActive,
             })),
           },
         },
@@ -128,6 +134,7 @@ export const saveArticle = async (data: FormData, id?: string | null) => {
           slug,
           thumbnail,
           poster,
+          uploadBy,
           metaDescription,
           status,
           content,
@@ -142,6 +149,10 @@ export const saveArticle = async (data: FormData, id?: string | null) => {
               name: stream.name,
               type: stream.type,
               url: stream.url,
+              drmId: stream.drmId,
+              drmKey: stream.drmKey,
+              directLink: stream.directLink,
+              directLinkActive: stream.directLinkActive,
             })),
           },
         },
@@ -190,9 +201,6 @@ export const deleteAllArticle = async (ids: string[]) => {
       message: `Success to delete ${articles.length} article`,
     };
   } catch (error) {
-    return {
-      success: false,
-      message: "Failed to delete articles",
-    };
+    throw new Error("Failed to delete articles");
   }
 };

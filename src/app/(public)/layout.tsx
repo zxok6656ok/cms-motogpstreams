@@ -93,25 +93,30 @@ export default async function PublicLayout({
   return (
     <>
       {/* Google Analytics */}
-      <Script
-        src="https://www.googletagmanager.com/gtag/js?id=G-G3KNCQ8N7G"
-        strategy="afterInteractive"
-      />
+      {process.env.VERCEL_ENV === "production" && site.googleAnalyticsId && (
+        <>
+          <Script
+            src={`https://www.googletagmanager.com/gtag/js?id=${site.googleAnalyticsId}`}
+            strategy="afterInteractive"
+          />
 
-      <Script id="google-analytics" strategy="afterInteractive">
-        {`
+          <Script id="google-analytics" strategy="afterInteractive">
+            {`
         window.dataLayer = window.dataLayer || [];
         function gtag(){window.dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', 'G-G3KNCQ8N7G');
+        gtag('config', '${site.googleAnalyticsId}');
       `}
-      </Script>
-
+          </Script>
+        </>
+      )}
       {/* Google Site Verification */}
-      <meta
-        name="google-site-verification"
-        content="xVjUOmyMEh47V9G9RsUsjdBI1_TsLi8zG1qkIXS--kU"
-      />
+      {process.env.VERCEL_ENV === "production" && site.googleSiteVerification && (
+        <meta
+          name="google-site-verification"
+          content={site.googleSiteVerification}
+        />
+      )}
 
       {process.env.VERCEL_ENV === "production" &&
         site.adLinks
@@ -122,7 +127,7 @@ export default async function PublicLayout({
 
       <div className="m-0 w-full p-0">
         <Navbar site={site} />
-       
+
         {process.env.VERCEL_ENV === "production" && (
           <AdsSection ads={ads} position="head" />
         )}

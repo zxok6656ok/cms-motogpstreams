@@ -59,12 +59,7 @@ export const adWidgetSave = async (formData: FormData, id?: string | null) => {
         : "The ads widgets was successfully created.",
     };
   } catch (error) {
-    console.log({ error });
-
-    return {
-      success: false,
-      message: "Failed to save ads widgets.",
-    };
+    throw new Error("Failed to save ads widgets.");
   }
 };
 
@@ -89,13 +84,10 @@ export const deleteAllAdWidget = async (ids: string[]) => {
     updateTag("ads-widget");
     return {
       success: true,
-     message: `Success to delete ${ads.length} ads widgets`,
+      message: `Success to delete ${ads.length} ads widgets`,
     };
   } catch (error) {
-    return {
-      success: false,
-      message: "Failed to delete ads widgets",
-    };
+    throw new Error("Failed to delete ads widgets");
   }
 };
 
@@ -118,9 +110,6 @@ export const deleteAdWidget = async (id: string) => {
       message: "Success to delete ads widgets",
     };
   } catch (error) {
-    return {
-      success: false,
-      message: "Failed to delete ads widgets",
-    };
+    throw new Error("Failed to delete ads widgets");
   }
 };

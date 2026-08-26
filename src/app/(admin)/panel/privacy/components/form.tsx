@@ -7,70 +7,123 @@ import { Input } from "@/components/ui/input";
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
-import { updatePage } from "../action";
 
-type Page = Prisma.PageGetPayload<{}>;
+import { z } from "zod";
+import { toast } from "@/components/ui/toast";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { updatePage } from "../../disclaimer/actions";
+
+
+type Page = Prisma.PageGetPayload<{
+  select: {
+    title: true;
+    id: true;
+    createdAt: true;
+    updatedAt: true;
+    content: true;
+    slug: true;
+  };
+}>;
 
 interface PageFormProps {
   page: Page | null;
 }
 
+const updatePageSchema = z.object({
+  title: z.string().trim().min(1, "Title wajib diisi"),
+  content: z.string().trim().min(1, "Content wajib diisi"),
+});
+
+type UpdatePageSchema = z.infer<typeof updatePageSchema>;
+
 export function PageForm({ page }: PageFormProps) {
+  const form = useForm<UpdatePageSchema>({
+    resolver: zodResolver(updatePageSchema),
+    defaultValues: {
+      title: page?.title ?? "",
+      content: page?.content ?? "",
+    },
+  });
+
+  async function onSubmit(values: UpdatePageSchema) {
+    try {
+      const formData = new FormData();
+
+      formData.append("id", page?.id ?? "");
+      formData.append("slug", page?.slug ?? "");
+      formData.append("title", values.title);
+      formData.append("content", values.content);
+
+      const { message } = await updatePage(formData, "Privacy", page?.id ?? "");
+
+      toast.add({
+        type: "success",
+        description: message,
+      });
+    } catch (error) {
+      toast.add({
+        type: "error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please try again.",
+        priority: "high",
+      });
+    }
+  }
+
   return (
-    <form action={updatePage}>
-      <input
-        type="hidden"
-        name="id"
-        value={page?.id}
-      />
-
-      <input
-        type="hidden"
-        name="slug"
-        value={page?.slug}
-      />
-
+    <form onSubmit={form.handleSubmit(onSubmit)}>
       <FieldGroup>
-        <Field>
-          <FieldLabel htmlFor="title">
-            Title
-          </FieldLabel>
+        <Controller
+          name="title"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="title">Title</FieldLabel>
 
-          <Input
-            id="title"
-            name="title"
-            defaultValue={page?.title}
-            className="rounded-sm"
-            required
-          />
-        </Field>
+              <Input
+                {...field}
+                id="title"
+                className="rounded-sm"
+                aria-invalid={fieldState.invalid}
+              />
 
-        <Field>
-          <FieldLabel htmlFor="content">
-            Content
-          </FieldLabel>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
 
-          <FieldDescription>
-            Content halaman.
-          </FieldDescription>
+        <Controller
+          name="content"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="content">Content</FieldLabel>
 
-          <Textarea
-            id="content"
-            name="content"
-            defaultValue={page?.content}
-            className="min-h-125 rounded-sm"
-            
-            required
-          />
-        </Field>
+              <FieldDescription>Content halaman.</FieldDescription>
+
+              <Textarea
+                {...field}
+                id="content"
+                className="min-h-125 rounded-sm"
+                aria-invalid={fieldState.invalid}
+              />
+
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
 
         <div className="flex justify-end">
-          <Button type="submit">
-            Save Changes
+          <Button disabled={form.formState.isSubmitting} type="submit">
+            {form.formState.isSubmitting ? "Saving..." : "Save Privacy"}
           </Button>
         </div>
       </FieldGroup>
