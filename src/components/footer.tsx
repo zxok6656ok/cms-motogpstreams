@@ -41,8 +41,8 @@ export function Footer({ site }: { site: Site }) {
                 inline-block
                 border-2 border-black
                 bg-[#4d7aff]
-                px-4 py-2
-                text-2xl font-black
+                px-2 sm:px-4 py-2
+                text-base sm:text-2xl font-black
                 text-black
                 shadow-[4px_4px_0px_0px_#000]
               "

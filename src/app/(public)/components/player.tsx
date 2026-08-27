@@ -43,10 +43,11 @@ export default function Player({
         className="
     mb-1
     flex
-    min-h-14
+    sm:min-h-14
     items-start
-    gap-1
-    text-xl
+    gap-0.5
+    sm:gap-1
+    text-base
     font-black
     leading-tight
     tracking-tight

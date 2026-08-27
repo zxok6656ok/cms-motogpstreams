@@ -58,7 +58,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
               mb-2
               min-h-14
               line-clamp-2
-              text-xl
+              text-base
               font-black
               leading-tight
               tracking-tight
@@ -92,7 +92,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
             )}
 
             {article.metaDescription && (
-              <p className="line-clamp-3 text-sm font-medium leading-relaxed text-neutral-700">
+              <p className="line-clamp-3  text-sm font-medium leading-relaxed text-neutral-700">
                 {article.metaDescription}
               </p>
             )}

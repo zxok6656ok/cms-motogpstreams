@@ -11,10 +11,10 @@ export default function PanelNotFound() {
 
         <h1 className="mt-6 text-4xl font-bold tracking-tight">404</h1>
 
-        <h2 className="mt-2 text-xl font-semibold">Halaman tidak ditemukan</h2>
+        <h2 className="mt-2 text-xl font-semibold">Page Not Found</h2>
 
         <p className="mt-2 text-sm text-muted-foreground">
-          Halaman panel yang kamu cari tidak tersedia atau sudah dipindahkan.
+         The panel page you are looking for is unavailable or has been moved.
         </p>
 
         <Link

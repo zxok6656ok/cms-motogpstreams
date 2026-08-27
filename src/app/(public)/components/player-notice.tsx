@@ -29,7 +29,9 @@ const PlayerNotice = ({ site }: { site: PlayerSite }) => {
           </div>
 
           <div>
-            <h2 className="font-black">{site.playerNoticeTitle}</h2>
+            <h2 className="font-black text-sm sm:text-base">
+              {site.playerNoticeTitle}
+            </h2>
 
             <p className="mt-1 text-sm font-medium leading-5">
               {site.playerNoticeDescription}
@@ -58,7 +60,7 @@ const PlayerNotice = ({ site }: { site: PlayerSite }) => {
           </div>
 
           <div>
-            <h2 className="font-black">{site.telegramTitle}</h2>
+            <h2 className="font-black text-sm sm:text-base">{site.telegramTitle}</h2>
 
             <p className="mt-1 text-sm font-medium leading-5">
               {site.telegramDescription}

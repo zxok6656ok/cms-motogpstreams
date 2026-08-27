@@ -16,7 +16,7 @@ export default async function AboutPage() {
             About
           </span>
 
-          <h1 className="text-4xl font-black uppercase sm:text-5xl">
+          <h1 className="text-xl font-black uppercase sm:text-3xlxl">
             {page.title}
           </h1>
         </div>

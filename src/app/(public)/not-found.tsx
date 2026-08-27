@@ -34,12 +34,11 @@ export default function NotFound() {
           </p>
 
           <h1 className="mt-4 text-3xl font-black uppercase tracking-tight sm:text-4xl">
-            Halaman Tidak Ditemukan
+            Page Not Found
           </h1>
 
           <p className="mt-4 max-w-lg text-base font-medium leading-relaxed text-neutral-700">
-            Maaf, halaman yang kamu cari tidak tersedia atau mungkin sudah
-            dipindahkan.
+            Sorry, the page you are looking for is not available or may have been moved.
           </p>
 
           {/* Actions */}

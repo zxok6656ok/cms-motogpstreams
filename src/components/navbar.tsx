@@ -60,8 +60,9 @@ export function Navbar({ site }: { site: Site }) {
             inline-block
             border-2 border-black
             bg-[#4d7aff]
-            px-4 py-2
-            text-2xl font-black
+            px-2 sm:px-4 py-2
+            text-base
+            sm:text-2xl font-black
             text-black
             shadow-[4px_4px_0px_0px_#000]
           "
@@ -69,8 +70,8 @@ export function Navbar({ site }: { site: Site }) {
           {site.title}
         </Link>
 
-        <div className="flex items-center gap-2">
-          <div className="hidden items-center gap-1 md:flex">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <div className="hidden items-center  gap-1 md:flex">
             {site.navbarItems.map((item) => {
               const active = isActive(item.url);
 
@@ -100,6 +101,7 @@ export function Navbar({ site }: { site: Site }) {
             onClick={() => setOpen(true)}
             size="icon"
             className="
+              ml-2 sm:ml-0
               rounded-none
               border-2 border-black
               bg-[#4d7aff]
@@ -147,8 +149,8 @@ export function Navbar({ site }: { site: Site }) {
                 p-4
               "
             >
-              <SheetHeader className="border-b-2 border-black pb-4">
-                <SheetTitle className="text-left text-2xl font-black">
+              <SheetHeader className="items-start border-b-2 border-black pb-4 px-auto">
+                <SheetTitle className="text-start text-base font-black sm:text-2xl">
                   {site.title}
                 </SheetTitle>
               </SheetHeader>
@@ -195,7 +197,9 @@ export function Navbar({ site }: { site: Site }) {
           "
         >
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black">Search</DialogTitle>
+            <DialogTitle className="text-base sm:text-2xl font-black">
+              Search
+            </DialogTitle>
           </DialogHeader>
 
           <div className="mt-2">
