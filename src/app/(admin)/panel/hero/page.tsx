@@ -39,7 +39,6 @@ export default async function Page() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Hero</h1>
-
           <p className="text-sm text-muted-foreground">Manage hero page.</p>
         </div>
       </div>
