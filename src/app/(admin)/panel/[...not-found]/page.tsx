@@ -14,7 +14,7 @@ export default function PanelNotFound() {
         <h2 className="mt-2 text-xl font-semibold">Page Not Found</h2>
 
         <p className="mt-2 text-sm text-muted-foreground">
-         The panel page you are looking for is unavailable or has been moved.
+          The panel page you are looking for is unavailable or has been moved.
         </p>
 
         <Link
@@ -38,7 +38,7 @@ export default function PanelNotFound() {
           "
         >
           <ArrowLeft className="size-4" />
-          Kembali ke Panel
+          Back to Home
         </Link>
       </div>
     </div>

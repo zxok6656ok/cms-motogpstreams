@@ -61,7 +61,7 @@ export default function NotFound() {
               "
             >
               <Home className="size-5 stroke-3" />
-              Kembali ke Home
+              Back to Home
             </Link>
 
            
