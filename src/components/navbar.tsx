@@ -60,17 +60,17 @@ export function Navbar({ site }: { site: Site }) {
             inline-block
             border-2 border-black
             bg-[#4d7aff]
-            px-2 sm:px-4 py-2
+            px-4 py-2
             text-base
             sm:text-2xl font-black
             text-black
             shadow-[4px_4px_0px_0px_#000]
           "
         >
-          {site.title}
+          MOTOGPSTREAMS
         </Link>
 
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-2">
           <div className="hidden items-center  gap-1 md:flex">
             {site.navbarItems.map((item) => {
               const active = isActive(item.url);
