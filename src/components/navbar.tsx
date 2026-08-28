@@ -67,7 +67,7 @@ export function Navbar({ site }: { site: Site }) {
             shadow-[4px_4px_0px_0px_#000]
           "
         >
-          MOTOGPSTREAMS
+          {site.title}
         </Link>
 
         <div className="flex items-center gap-2">
