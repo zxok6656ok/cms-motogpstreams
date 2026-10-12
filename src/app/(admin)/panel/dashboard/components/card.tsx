@@ -15,39 +15,39 @@ import {
 type DashboardCardsProps = {
   articles: number;
   categories: number;
-  streams: number;
+  genres: number;
   siteConfigured: boolean;
 };
 
 export function DashboardCards({
   articles,
   categories,
-  streams,
+  genres,
   siteConfigured,
 }: DashboardCardsProps) {
   const cards = [
     {
-      title: "Articles",
+      title: "Videos",
       value: articles,
-      description: "Total articles",
+      description: "Total Videos",
       icon: FileText,
     },
     {
       title: "Categories",
       value: categories,
-      description: "Total categories",
+      description: "Total Categories",
       icon: Folder,
     },
     {
-      title: "Streams",
-      value: streams,
-      description: "Total streams",
+      title: "Genres",
+      value: genres,
+      description: "Total Genres",
       icon: Radio,
     },
     {
       title: "Site Settings",
       value: siteConfigured ? "Configured" : "Not configured",
-      description: "Website configuration",
+      description: "Website Configuration",
       icon: Settings,
     },
   ];

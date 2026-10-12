@@ -3,9 +3,7 @@ import { ArticleCard } from "./components/article-card";
 import { ArticlePagination } from "./components/article-pagination";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { List, Search } from "lucide-react";
-import Hero from "@/components/hero";
-import { getSiteSetting } from "../../../lib/site";
+import { AlertCircleIcon, List, Search } from "lucide-react";
 
 type HomePageProps = {
   searchParams: Promise<{
@@ -21,131 +19,57 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   const search = (params.q ?? "").trim();
   const isSearching = search.length > 0;
-  const [site, { articles, currentPage, totalPages, total }] =
-    await Promise.all([getSiteSetting(), getArticles(page, search)]);
+  const [{ articles, currentPage, totalPages, total }] = await Promise.all([
+    getArticles(page, search),
+  ]);
+
   return (
     <div className="w-full bg-white">
-      {!isSearching && <Hero site={site} />}
-      <main className="mx-auto max-w-6xl px-2  py-2">
-        <section className="border-b-4 border-black mx-2 py-2">
-          <div className="mx-auto max-w-6xl">
-            <div className="flex flex-col gap-1 sm:gap-3 md:gap-6  md:flex-row md:items-end md:justify-between">
-              <div>
-                <h1 className="mt-2 flex items-center gap-1 text-xl  sm:text-2xl font-black tracking-tighter ">
-                  <List className="size-[1em]" />
-                  News
-                </h1>
-              </div>
-
-              {search && (
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                  <div
-                    className="
-        flex
-        min-w-0
-        max-w-full
-        items-center
-        gap-1.5
-        border-2
-        border-black
-        bg-white
-        px-2
-        py-1
-        text-sm
-        font-bold
-        shadow-[3px_3px_0px_0px_#000]
-        sm:gap-2
-        sm:px-3
-        sm:py-1.5
-        sm:text-base
-      "
-                  >
-                    <Search className="size-3.5 shrink-0 sm:size-4" />
-
-                    <span className="shrink-0 ">Search results:</span>
-
-                    <span
-                      className="
-          min-w-0
-          max-w-30
-          truncate
-          px-1
-          sm:max-w-50
-          sm:px-2
-        "
-                    >
-                      {search}
-                    </span>
-
-                    <span className="shrink-0 text-xs text-slate-600 sm:text-sm">
-                      ({total})
-                    </span>
-                  </div>
-
-                  <Link href="/">
-                    <Button
-                      variant="outline"
-                      className="
-          h-8
-          rounded-none
-          border-2
-          border-black
-          bg-[#dfff00]
-          px-3
-          text-xs
-          font-bold
-          text-black
-          shadow-[3px_3px_0px_0px_#000]
-          transition-all
-          hover:translate-x-0.5
-          hover:translate-y-0.5
-          hover:bg-[#4d7aff]
-          hover:text-black
-          hover:shadow-none
-          sm:h-9
-          sm:px-4
-          sm:text-sm
-        "
-                    >
-                      Reset
-                    </Button>
-                  </Link>
-                </div>
-              )}
+      <main className="mx-auto px-2  py-2">
+        <section className="mb-10 px-2 py-1 sm:py-2 sm:mb-24">
+          <div className="min-w-0  max-w-full rounded-lg border bg-white px-3 py-2 text-sm text-muted-foreground">
+            <div className="mb-0 flex items-center gap-2 uppercase text-sm text-muted-foreground">
+              <List className="size-4" />
+              <span>video terbaru</span>
             </div>
           </div>
-        </section>
+          <div className="mx-auto w-full">
+            <section className="mx-0 py-3">
+              <div className="mx-auto w-full">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  {search && (
+                    <div className="flex flex-wrap items-center gap-1">
+                      <div className="flex min-w-0 max-w-full items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm text-muted-foreground">
+                        <Search className="size-4 shrink-0" />
 
-        <section className="mb-10 px-2 py-5 sm:py-10 sm:mb-24">
-          <div className="mx-auto max-w-7xl">
-            {search && (
-              <div
-                className="
-      mb-5
-      border-2
-      border-black
-      bg-[#ffde59]
-      p-2.5
-      text-sm
-      font-black
-      leading-tight
-      shadow-[3px_3px_0_#000]
-      sm:mb-8
-      sm:border-4
-      sm:p-4
-      sm:text-base
-      sm:leading-normal
-      sm:shadow-[5px_5px_0_#000]
-    "
-              >
-                SEARCH RESULTS: &quot;{search}&quot;
-                <span className="ml-1 sm:ml-2">({total})</span>
+                        <span className="shrink-0">SEARCH RESULTS:</span>
+
+                        <span className="min-w-0 max-w-32 truncate font-medium text-foreground sm:max-w-56">
+                          {search}
+                        </span>
+
+                        <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
+                          {total}
+                        </span>
+                      </div>
+
+                      <Link href="/">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 gap-1.5 rounded-lg border-border bg-white px-3 text-sm font-medium transition-colors hover:bg-muted"
+                        >
+                          Reset
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-
+            </section>
             {articles.length > 0 ? (
               <>
-                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-2 md:grid-cols-3 lg:grid-cols-5">
                   {articles.map((article) => (
                     <ArticleCard key={article.id} article={article} />
                   ))}
@@ -158,8 +82,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 />
               </>
             ) : (
-              <div className="border-4 border-black bg-white p-12 text-center font-black shadow-[7px_7px_0_#000]">
-                ARTICLE NOT FOUND
+              <div className="flex h-32 min-w-0 max-w-full flex-col items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-center">
+                <AlertCircleIcon className="size-6 text-gray-400" />
+                <p className="text-sm font-medium text-gray-500">
+                  VIDEO NOT FOUND
+                </p>
               </div>
             )}
           </div>

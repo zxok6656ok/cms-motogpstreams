@@ -80,7 +80,7 @@ const formSchema = z.object({
       name: z.string().min(1, "Name is required."),
       url: z.string().min(1, "URL is required."),
       order: z.number(),
-      position: z.enum(["head", "body"]),
+      position: z.enum(["head", "body", "popunder"]),
       isActive: z.boolean(),
     }),
   ),
@@ -1017,6 +1017,7 @@ const SiteSettingForm = ({ site }: SiteSettingFormProps) => {
                           <SelectItem value="head">Head</SelectItem>
 
                           <SelectItem value="body">Body</SelectItem>
+                           <SelectItem value="popunder">Popunder</SelectItem>
                         </SelectContent>
                       </Select>
 

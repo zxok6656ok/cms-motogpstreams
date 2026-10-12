@@ -10,7 +10,11 @@ import type { Prisma } from "@/generated/prisma/client";
 export type Article = Prisma.ArticleGetPayload<{
   include: {
     categories: true;
-    streams: true;
+    genres: true;
+    iframe: true;
+    download: {
+      include: { links: true };
+    };
   };
 }>;
 
@@ -38,7 +42,7 @@ const Page = async ({ searchParams }: PageProps) => {
       }
     : {};
 
-  const [articles, total, streams] = await Promise.all([
+  const [articles, total] = await Promise.all([
     prisma.article.findMany({
       where,
       skip: (page - 1) * pageSize,
@@ -48,17 +52,16 @@ const Page = async ({ searchParams }: PageProps) => {
       },
       include: {
         categories: true,
-        streams: true,
+        genres: true,
+        iframe: true,
+        download: {
+          include: { links: true },
+        },
       },
     }),
 
     prisma.article.count({
       where,
-    }),
-    prisma.stream.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
     }),
   ]);
 
@@ -67,7 +70,6 @@ const Page = async ({ searchParams }: PageProps) => {
   return (
     <Table
       data={articles}
-      streams={streams}
       page={page}
       pageSize={pageSize}
       pageCount={pageCount}

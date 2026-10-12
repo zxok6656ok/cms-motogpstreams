@@ -1,5 +1,5 @@
 "use client";
-import { Plus, Trash2 } from "lucide-react";
+import { ImportIcon, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/data-table";
@@ -14,11 +14,16 @@ import { deleteAllArticle, deleteArticle } from "../action";
 import { toast } from "@/components/ui/toast";
 import { useRouter } from "next/navigation";
 import { RowSelectionState } from "@tanstack/react-table";
+import ImportJson from "./importjson";
 
 export type Article = Prisma.ArticleGetPayload<{
   include: {
     categories: true;
-    streams: true;
+    genres: true;
+    iframe: true;
+    download: {
+      include: { links: true };
+    };
   };
 }>;
 
@@ -29,18 +34,13 @@ type TableProps = {
   pageCount: number;
   total: number;
   search: string;
-  streams: ExistingStream[];
 };
 
 export type ExistingStream = {
   id: string;
-  name: string;
-  type: "hls" | "dash";
-  url: string;
-  drmId: string | null;
-  drmKey: string | null;
-  directLink: string | null;
-  directLinkActive: boolean;
+  title: string;
+  src: string;
+  isActive: boolean;
 };
 
 export default function Table({
@@ -50,11 +50,11 @@ export default function Table({
   pageCount,
   total,
   search,
-  streams,
 }: TableProps) {
   const [open, setOpen] = useState<boolean>(false);
   const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
   const [openModalView, setOpenModalView] = useState<boolean>(false);
+  const [openModalImport, setOpenModalImport] = useState<boolean>(false);
   const [article, setArticle] = useState<Article | null>(null);
   const [type, setType] = useState<"add" | "edit">("add");
   const [typeDelete, setTypeDelete] = useState<"single" | "many">("single");
@@ -158,6 +158,15 @@ export default function Table({
             <Plus className="mr-2 h-4 w-4" />
             Add Posts
           </Button>
+          <Button
+            onClick={() => {
+              setOpenModalImport(true);
+            }}
+            className="w-full rounded-sm sm:w-auto"
+          >
+            <ImportIcon className="mr-2 h-4 w-4" />
+            Import JSON
+          </Button>
         </div>
       </div>
 
@@ -178,9 +187,10 @@ export default function Table({
         setOpen={setOpen}
         article={article}
         type={type}
-        streams={streams}
+        iframe={article?.iframe ?? []}
       />
       <View open={openModalView} setOpen={setOpenModalView} article={article} />
+      <ImportJson open={openModalImport} setOpen={setOpenModalImport} />
       <Delete
         open={openModalDelete}
         setOpen={setOpenModalDelete}

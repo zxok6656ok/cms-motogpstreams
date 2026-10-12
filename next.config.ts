@@ -12,6 +12,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "*.bp.blogspot.com",
       },
+      {
+        protocol: "https",
+        hostname: "placehold.co",
+      },
+        {
+        protocol: "https",
+        hostname: "nekopoi.care",
+      },
     ],
   },
 };

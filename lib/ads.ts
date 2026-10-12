@@ -4,7 +4,7 @@ import { Prisma } from "@/generated/prisma/client";
 
 export const getAds = unstable_cache(
   async () => {
-    return prisma.adWidget.findMany({
+    return prisma.adLink.findMany({
       where: {
         isActive: true,
       },
@@ -13,16 +13,16 @@ export const getAds = unstable_cache(
       },
     });
   },
-  ["ads-widget"],
+  ["ads-link"],
   {
-    tags: ["ads-widget"],
+    tags: ["ads-link"],
   },
 );
 
-export type AdsSectionProps = Prisma.AdWidgetGetPayload<{
+export type AdsSectionProps = Prisma.AdLinkGetPayload<{
   omit: {
     createdAt: true;
     updatedAt: true;
-    showClose: true;
+    siteSettingId: true;
   };
 }>;

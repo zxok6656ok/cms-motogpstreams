@@ -11,10 +11,10 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardPage() {
-  const [articles, categories, streams, siteSetting] = await Promise.all([
+  const [articles, categories, genres, siteSetting] = await Promise.all([
     prisma.article.count(),
     prisma.category.count(),
-    prisma.stream.count(),
+    prisma.genre.count(),
     prisma.siteSetting.findFirst({
       select: {
         siteName: true,
@@ -31,7 +31,7 @@ export default async function DashboardPage() {
       <DashboardCards
         articles={articles}
         categories={categories}
-        streams={streams}
+        genres={genres}
         siteConfigured={!!siteSetting}
       />
     </div>

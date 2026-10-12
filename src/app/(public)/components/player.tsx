@@ -5,14 +5,21 @@ import { ServerButtons } from "./server";
 import PlayerNotice from "./player-notice";
 import type { Prisma } from "@/generated/prisma/client";
 import { Posts } from "../[...slug]/page";
-import Hls from "./hls";
-import Dash from "./dash";
-import { AlertCircleIcon, Calendar, TextIcon, UserIcon } from "lucide-react";
+import {
+  AlertCircleIcon,
+  Calendar,
+  Download,
+  ExternalLink,
+  TextIcon,
+  UserIcon,
+} from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import AdsSection from "@/components/ads/after-hero";
+
 import { AdsSectionProps } from "../../../../lib/ads";
 import Link from "next/link";
+import Iframe from "./iframe";
+import Image from "next/image";
 
 export type PlayerSite = Prisma.SiteSettingGetPayload<{
   select: {
@@ -34,127 +41,199 @@ export default function Player({
   ads: AdsSectionProps[];
 }) {
   const [activeServer, setActiveServer] = useState(
-    posts.streams[0]?.name ?? "",
+    posts.iframe[0]?.title ?? "",
   );
 
-  const activeStream = posts.streams.find(
-    (stream) => stream.name === activeServer,
+  const activeStream = posts.iframe.find(
+    (stream) => stream.title === activeServer,
   );
 
   const createdAt = new Date(posts.createdAt);
 
   return (
-    <section className="mx-auto mb-5 w-full max-w-6xl px-4 py-7 ">
-      <h2
-        className="
-          mb-1
-          flex
-          sm:min-h-14
-          items-start
-          gap-0.5
-          sm:gap-1
-          text-base
-          font-black
-          leading-tight
-          tracking-tight
-          sm:items-center
-          sm:text-2xl
-        "
-      >
-        <TextIcon className="w-6" />
-        {posts.title}
-      </h2>
-      <div className="flex gap-3 items-start sm:items-center mb-2">
-        <div className="flex gap-1 items-center mb-2">
-          <Calendar className="w-5 h-5" />
-          <time
-            dateTime={createdAt.toISOString()}
-            className="text-xs font-black uppercase"
-          >
-            {format(createdAt, "dd MMM yyyy", {
-              locale: id,
-            })}
-          </time>
-        </div>
-        <div className="flex gap-1 items-center mb-2">
-          <UserIcon className="w-5 h-5" />
-          <span className="text-xs font-black uppercase">{posts.uploadBy}</span>
+    <section className="mx-auto mb-8 w-full  px-4 py-4 ">
+      <div className="mb-5 space-y-3">
+        <h2 className="flex items-start gap-2 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+          <TextIcon className="mt-0.5 size-6 shrink-0 text-primary" />
+          <span>{posts.title}</span>
+        </h2>
+
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <Calendar className="size-4" />
+            <time dateTime={createdAt.toISOString()}>
+              {format(createdAt, "dd MMM yyyy", {
+                locale: id,
+              })}
+            </time>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <UserIcon className="size-4" />
+            <span>{posts.uploadBy}</span>
+          </div>
         </div>
       </div>
-      <div
-        className="
-          overflow-hidden
-          border-2 border-black
-          bg-black
-          shadow-[6px_6px_0px_0px_#000]
-          p-0 m-0
-        "
-      >
-        <div className="relative aspect-video w-full p-0 m-0 ">
-          {/* player */}
+      {posts.thumbnail && (
+        <div className="relative mb-5 aspect-video w-full overflow-hidden rounded-xl border border-border bg-muted">
+          <Image
+            src={posts.thumbnail}
+            alt={posts.title}
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 1200px"
+            className="object-cover"
+          />
+        </div>
+      )}
+      <div className="overflow-hidden rounded-xl border border-border bg-black shadow-sm">
+        <div className="relative aspect-video w-full">
           {activeStream && activeStream.isActive ? (
-            <div className="flex h-full items-center justify-center p-0 m-0">
-              {activeStream.type == "hls" ? (
-                <Hls
-                  name={activeStream.name}
-                  url={activeStream.url}
-                  poster={posts.poster ?? ""}
-                />
-              ) : (
-                <Dash
-                  name={activeStream.name}
-                  url={activeStream.url}
-                  drmId={activeStream.drmId ?? undefined}
-                  drmKey={activeStream.drmKey ?? undefined}
-                  poster={posts.poster ?? ""}
-                />
-              )}
+            <div className="flex size-full items-center justify-center">
+              <Iframe src={activeStream.src} />
             </div>
           ) : (
-            <div className="flex h-full items-center justify-center text-white gap-1 uppercase">
-              <AlertCircleIcon /> Stream unavailable
+            <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-sm text-neutral-400">
+              <AlertCircleIcon className="size-8" />
+              <span>Stream unavailable</span>
             </div>
           )}
         </div>
       </div>
-      {process.env.VERCEL_ENV === "production" && (
-        <AdsSection ads={ads} position="article" />
-      )}
-      <PlayerNotice site={site} />
+      <div className="mt-5">
+        <PlayerNotice site={site} />
+      </div>
+      <div className="mt-5 rounded-xl border border-border bg-card p-3 sm:p-4">
+        <p className="mb-3 text-sm font-semibold text-foreground">
+          Pilih Server
+        </p>
 
-      <ServerButtons
-        servers={posts.streams}
-        activeServer={activeServer}
-        onServerChange={setActiveServer}
-      />
-      <div
-        className="w-full mt-7"
-        dangerouslySetInnerHTML={{
-          __html: posts.content ?? "",
-        }}
-      />
-      <p className="mb-1 text-sm font-black uppercase mt-10">Category</p>
-      {posts.categories.length > 0 && (
-        <div className="mb-4 flex min-h-8 flex-wrap gap-2 mt-1">
-          {posts.categories.map((category) => (
-            <Link key={category.slug} href={`/category/${category.slug}`}>
-              <span
-                key={category.slug}
-                className="
-                          border-2 border-black
-                          bg-[#ff90e8]
-                          px-2 py-1
-                          text-xs
-                          font-black
-                          uppercase
-                        "
-              >
-                {category.name}
-              </span>
-            </Link>
-          ))}
-        </div>
+        <ServerButtons
+          servers={posts.iframe}
+          activeServer={activeServer}
+          onServerChange={setActiveServer}
+          ads={ads}
+        />
+      </div>
+      {posts.content && (
+        <div
+          className="
+            prose prose-sm mt-7 max-w-none
+            prose-headings:font-bold
+            prose-headings:tracking-tight
+            prose-a:text-primary
+            prose-img:rounded-lg
+            dark:prose-invert
+            sm:prose-base
+          "
+          dangerouslySetInnerHTML={{
+            __html: posts.content,
+          }}
+        />
       )}
+
+      <div className="mt-6 border-t border-border pt-5">
+        <p className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Download className="size-4 text-primary" />
+          Download Links
+        </p>
+
+        {posts.download.length > 0 && (
+          <div className="space-y-4">
+            {posts.download.map((download, index) => (
+              <div key={`${download.quality}-${index}`} className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground">
+                  {download.quality}
+                </p>
+
+                <div className="flex flex-wrap gap-2">
+                  {download.links.map((link, linkIndex) => (
+                    <Link
+                      key={
+                        link.id ||
+                        `${download.quality}-${link.name}-${linkIndex}`
+                      }
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="
+                        inline-flex items-center gap-2 rounded-full
+                        border border-border bg-muted/50
+                        px-3 py-1.5 text-xs font-medium
+                        text-muted-foreground
+                        transition-colors
+                      hover:border-black/80
+                      hover:bg-black/90
+                      hover:text-white
+                      "
+                    >
+                      <Download className="size-3.5" />
+                      {link.name}
+                      <ExternalLink className="size-3 opacity-60" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 gap-6 border-t border-border pt-5 md:grid-cols-2">
+        <div>
+          <p className="mb-3 text-sm font-semibold text-foreground">Genres</p>
+
+          {posts.genres.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {posts.genres.map((genre) => (
+                <Link
+                  key={genre.slug}
+                  href={`/genres/${genre.slug}`}
+                  className="
+              inline-flex items-center rounded-full
+              border border-border bg-muted/50
+              px-3 py-1.5 text-xs font-medium
+              text-muted-foreground
+              transition-colors
+              hover:border-primary/40
+              hover:bg-primary/10
+              hover:text-primary
+            "
+                >
+                  {genre.name}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <p className="mb-3 text-sm font-semibold text-foreground">Category</p>
+
+          {posts.categories.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {posts.categories.map((category) => (
+                <Link
+                  key={category.slug}
+                  href={`/category/${category.slug}`}
+                  className="
+              inline-flex items-center rounded-full
+              border border-border bg-muted/50
+              px-3 py-1.5 text-xs font-medium
+              text-muted-foreground
+              transition-colors
+              hover:border-primary/40
+              hover:bg-primary/10
+              hover:text-primary
+            "
+                >
+                  {category.name}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </section>
   );
 }

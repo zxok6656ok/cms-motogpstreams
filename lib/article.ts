@@ -1,7 +1,7 @@
 import { unstable_cache } from "next/cache";
 import prisma from "./prisma";
 
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 15;
 
 async function fetchArticles(page: number, search: string) {
   const currentPage = Math.max(1, page);
@@ -43,15 +43,6 @@ async function fetchArticles(page: number, search: string) {
   return Promise.all([
     prisma.article.findMany({
       where,
-
-      include: {
-        categories: {
-          select: {
-            name: true,
-            slug: true,
-          },
-        },
-      },
 
       omit: {
         updatedAt: true,
@@ -101,19 +92,28 @@ export const getArticle = (slug: string) =>
           status: "publish",
         },
         include: {
-          streams: {
+          iframe: {
             select: {
-              name: true,
-              type: true,
-              url: true,
-              drmId: true,
-              drmKey: true,
-              directLink: true,
-              directLinkActive: true,
+              title: true,
+              src: true,
               isActive: true,
             },
           },
+          download: {
+            select: {
+              quality: true,
+              links: {
+                select: { name: true, url: true },
+              },
+            },
+          },
           categories: {
+            select: {
+              name: true,
+              slug: true,
+            },
+          },
+          genres: {
             select: {
               name: true,
               slug: true,

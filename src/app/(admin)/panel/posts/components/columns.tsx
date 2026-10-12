@@ -30,7 +30,11 @@ import Image from "next/image";
 export type Article = Prisma.ArticleGetPayload<{
   include: {
     categories: true;
-    streams: true;
+    genres: true;
+    iframe: true;
+    download: {
+      include: { links: true };
+    };
   };
 }>;
 
@@ -152,32 +156,6 @@ export const getColumns = ({
       );
     },
   },
-  {
-    accessorKey: "poster",
-    header: "WM Player",
-
-    cell: ({ row }) => {
-      const thumbnail = row.getValue("poster") as string;
-
-      return (
-        <div className="relative h-14 w-20 overflow-hidden rounded-md">
-          {thumbnail ? (
-            <Image
-              src={thumbnail}
-              alt="Thumbnail"
-              fill
-              className="object-cover"
-              sizes="80px"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-muted text-xs text-muted-foreground">
-              No Image
-            </div>
-          )}
-        </div>
-      );
-    },
-  },
 
   {
     accessorKey: "title",
@@ -204,7 +182,24 @@ export const getColumns = ({
       return <span>{categori}</span>;
     },
   },
+  {
+    accessorKey: "genres",
+    header: ({ column }) => (
+      <PostSortableColumn column={column} title="Genres" />
+    ),
+    cell: ({ row }) => {
+      const genres = row.original.genres.map((e) => e.name);
+      const maxGenres = 2;
+      const displayedGenres = genres.slice(0, maxGenres).join(", ");
 
+      return (
+        <span title={genres.join(", ")}>
+          {displayedGenres}
+          {genres.length > maxGenres && "..."}
+        </span>
+      );
+    },
+  },
   {
     accessorKey: "status",
 

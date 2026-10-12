@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getAllCategory } from "../../../../lib/category";
 import { getSiteSeo } from "../../../../lib/site";
 import { List } from "lucide-react";
+import Loading from "./loading";
 
 export async function generateMetadata(): Promise<Metadata> {
   const site = await getSiteSeo();
@@ -68,36 +69,29 @@ export default async function CategoryPage() {
   }
 
   return (
-    <main className="min-h-96 h-auto bg-[#FFFDF5] px-4 py-10">
-      <div className="mx-auto w-full max-w-6xl px-4">
-        {/* Header */}
-        <h1 className="mt-2 flex items-center gap-1 text-xl  sm:text-2xl font-black tracking-tighter ">
-          <List className="size-[1em]" />
-          Category
-        </h1>
-
-        {categories.length > 0 ? (
-          <div className="mt-4 mb-4 flex min-h-8 flex-wrap gap-2">
-            {categories.map((category) => (
-              <Link key={category.slug} href={`/category/${category.slug}`}>
-                <span
-                  className="
-                    border-2 border-black
-                    bg-[#ff90e8]
-                    px-2 py-1
-                    text-xs
-                    font-black
-                    uppercase
-                  "
-                >
-                  {category.name}
-                </span>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div
-            className="
+    <div className="w-full bg-white">
+      <main className="mx-auto px-2  py-2">
+        <section className="mb-10 px-2 py-1 sm:py-2 sm:mb-24">
+          <div className="mx-auto w-full">
+            <div className="min-w-0  max-w-full rounded-lg border bg-white px-3 py-2 text-sm text-muted-foreground">
+              <div className="mb-0 flex items-center gap-2 uppercase text-sm text-muted-foreground">
+                <List className="size-4" />
+                <span>Category</span>
+              </div>
+            </div>
+            {categories.length > 0 ? (
+              <div className="mt-4 mb-4 flex min-h-8 flex-wrap gap-2">
+                {categories.map((category) => (
+                  <Link key={category.slug} href={`/category/${category.slug}`}>
+                    <span className="flex min-w-0 max-w-full items-center gap-2 rounded-lg border bg-black px-3 py-2 text-sm text-white">
+                      {category.name}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div
+                className="
               border-4 border-black
               bg-white
               p-10
@@ -105,11 +99,13 @@ export default async function CategoryPage() {
               font-black
               shadow-[7px_7px_0_#000]
             "
-          >
-            There are no category yet.
+              >
+                There are no category yet.
+              </div>
+            )}
           </div>
-        )}
-      </div>
-    </main>
+        </section>
+      </main>
+    </div>
   );
 }

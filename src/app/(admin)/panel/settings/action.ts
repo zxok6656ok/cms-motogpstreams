@@ -103,7 +103,7 @@ export const saveSiteSettings = async (
               name: string;
               url: string;
               order: number;
-              position: "head" | "body";
+              position: "head" | "body" | "popunder";
               isActive: boolean;
             }) => ({
               name: item.name,
@@ -117,6 +117,7 @@ export const saveSiteSettings = async (
       },
     });
     updateTag("site-setting");
+    updateTag("ads-link")
     return {
       success: true,
       data: "site-settings",

@@ -10,8 +10,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Copy } from "lucide-react";
+import { Copy, Download, ExternalLink } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 type ViewProps = {
   open: boolean;
@@ -51,21 +52,21 @@ const View = ({ open, setOpen, article }: ViewProps) => {
               </div>
             </div>
 
-            <Badge variant="secondary">Article</Badge>
+            <Badge variant="secondary">Video</Badge>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-5">
-          <div className="flex gap-3">
-            <div>
-              <div className="relative h-14 w-20 overflow-hidden rounded-md md:h-20 md:w-28 lg:h-24 lg:w-36 xl:h-28 xl:w-44">
+          <div className="flex w-full gap-3">
+            <div className="w-full">
+              <div className="relative h-48 w-full overflow-hidden rounded-md sm:h-56 md:h-64 lg:h-72">
                 {article.thumbnail ? (
                   <Image
                     src={article.thumbnail}
                     alt="Thumbnail"
                     fill
                     className="object-cover"
-                    sizes="(max-width: 767px) 80px, (max-width: 1023px) 112px, (max-width: 1279px) 144px, 176px"
+                    sizes="100vw"
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-muted text-xs text-muted-foreground">
@@ -76,49 +77,6 @@ const View = ({ open, setOpen, article }: ViewProps) => {
 
               <p className="mt-1 text-center text-xs text-muted-foreground">
                 Thumbnail
-              </p>
-            </div>
-
-            <div>
-              <div className="relative h-14 w-20 overflow-hidden rounded-md md:h-20 md:w-28 lg:h-24 lg:w-36 xl:h-28 xl:w-44">
-                {article.poster ? (
-                  <Image
-                    src={article.poster}
-                    alt="Poster"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 767px) 80px, (max-width: 1023px) 112px, (max-width: 1279px) 144px, 176px"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-muted text-xs text-muted-foreground">
-                    No Image
-                  </div>
-                )}
-              </div>
-
-              <p className="mt-1 text-center text-xs text-muted-foreground">
-                Poster
-              </p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Categories</p>
-
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                {article.categories.map((category) => (
-                  <Badge key={category.id} variant="outline">
-                    {category.name}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="text-sm text-muted-foreground">Created</p>
-
-              <p className="text-sm font-medium mt-1">
-                {format(article.createdAt, "dd MMMM yyyy, HH:mm")}
               </p>
             </div>
           </div>
@@ -152,22 +110,127 @@ const View = ({ open, setOpen, article }: ViewProps) => {
             </p>
 
             <div className="space-y-2">
-              {article.streams.map((stream) => (
+              {article.iframe.map((stream) => (
                 <div key={stream.id} className="rounded-md border p-3">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="font-medium text-sm">{stream.name}</span>
-
-                    <Badge variant="outline">{stream.type.toUpperCase()}</Badge>
+                    <span className="font-medium text-sm">{stream.title}</span>
                   </div>
 
                   <p className="text-xs text-muted-foreground mt-1 break-all">
-                    {stream.url}
+                    {stream.src}
                   </p>
                 </div>
               ))}
             </div>
           </div>
+          <div className="mt-6 border-t border-border pt-5">
+            <p className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
+              <Download className="size-4 text-primary" />
+              Download Links
+            </p>
 
+            {article.download.length > 0 && (
+              <div className="space-y-4">
+                {article.download.map((download, index) => (
+                  <div
+                    key={`${download.quality}-${index}`}
+                    className="space-y-2"
+                  >
+                    <p className="text-xs font-semibold text-muted-foreground">
+                      {download.quality}
+                    </p>
+
+                    <div className="flex flex-wrap gap-2">
+                      {download.links.map((link, linkIndex) => (
+                        <Link
+                          key={
+                            link.id ||
+                            `${download.quality}-${link.name}-${linkIndex}`
+                          }
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="
+                        inline-flex items-center gap-2 rounded-full
+                        border border-border bg-muted/50
+                        px-3 py-1.5 text-xs font-medium
+                        text-muted-foreground
+                        transition-colors
+                      hover:border-black/80
+                      hover:bg-black/90
+                      hover:text-white
+                      "
+                        >
+                          <Download className="size-3.5" />
+                          {link.name}
+                          <ExternalLink className="size-3 opacity-60" />
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="mt-8 grid grid-cols-1 gap-6 border-t border-border pt-5 md:grid-cols-2">
+            <div>
+              <p className="mb-3 text-sm font-semibold text-foreground">
+                Genres
+              </p>
+
+              {article.genres.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {article.genres.map((genre) => (
+                    <Link
+                      key={genre.slug}
+                      href={`/genres/${genre.slug}`}
+                      className="
+                      inline-flex items-center rounded-full
+                      border border-border bg-muted/50
+                      px-3 py-1.5 text-xs font-medium
+                      text-muted-foreground
+                      transition-colors
+                      hover:border-primary/40
+                      hover:bg-primary/10
+                      hover:text-primary
+                    "
+                    >
+                      {genre.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <p className="mb-3 text-sm font-semibold text-foreground">
+                Category
+              </p>
+
+              {article.categories.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {article.categories.map((category) => (
+                    <Link
+                      key={category.slug}
+                      href={`/category/${category.slug}`}
+                      className="
+                      inline-flex items-center rounded-full
+                      border border-border bg-muted/50
+                      px-3 py-1.5 text-xs font-medium
+                      text-muted-foreground
+                      transition-colors
+                      hover:border-primary/40
+                      hover:bg-primary/10
+                      hover:text-primary
+                    "
+                    >
+                      {category.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
           <div>
             <p className="text-sm text-muted-foreground mb-2">Content</p>
 

@@ -16,7 +16,7 @@ export type Site = Prisma.SiteSettingGetPayload<{ select: { title: true } }>;
 const getSiteSetting = unstable_cache(
   async () => {
     return prisma.siteSetting.findFirstOrThrow({
-      select: { title: true, favicon: true },
+      select: { title: true, favicon: true, logo: true },
     });
   },
   ["site-setting"],

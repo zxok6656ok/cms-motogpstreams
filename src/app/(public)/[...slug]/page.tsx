@@ -10,19 +10,28 @@ import { getAds } from "../../../../lib/ads";
 
 export type Posts = Prisma.ArticleGetPayload<{
   include: {
-    streams: {
+    iframe: {
       select: {
-        name: true;
-        type: true;
-        url: true;
-        drmId: true;
-        drmKey: true;
-        directLink: true;
-        directLinkActive: true;
+        title: true;
+        src: true;
         isActive: true;
       };
     };
+    download: {
+      select: {
+        quality: true;
+        links: {
+          select: { name: true; url: true; id: true };
+        };
+      };
+    };
     categories: {
+      select: {
+        name: true;
+        slug: true;
+      };
+    };
+    genres: {
       select: {
         name: true;
         slug: true;

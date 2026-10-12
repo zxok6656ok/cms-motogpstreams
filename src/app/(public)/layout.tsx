@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
 import { Prisma } from "@/generated/prisma/client";
 import { getSiteSetting } from "../../../lib/site";
 import { getAds } from "../../../lib/ads";
 import AdsSection from "@/components/ads/after-hero";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar-public";
+import { Separator } from "@/components/ui/separator";
+import Breadcrumbnav from "@/components/breadcrumb-nav";
+import SearchField from "./components/search";
 
 export type Site = Prisma.SiteSettingGetPayload<{
   include: {
@@ -90,59 +96,84 @@ export default async function PublicLayout({
   const [site, ads] = await Promise.all([getSiteSetting(), getAds()]);
 
   return (
-    <div className="bg-[#FFFDF5] h-screen">
-      {/* Google Analytics */}
-      {process.env.VERCEL_ENV === "production" && site.googleAnalyticsId && (
-        <>
-          <Script
-            src={`https://www.googletagmanager.com/gtag/js?id=${site.googleAnalyticsId}`}
-            strategy="afterInteractive"
+    <SidebarProvider>
+      <AppSidebar site={site} />
+
+      <SidebarInset>
+   
+        <header className="sticky top-0 z-50 flex h-16 min-w-0 shrink-0 items-center gap-2 overflow-hidden border-b bg-white px-3 sm:px-4">
+          <SidebarTrigger className="-ml-1 shrink-0" />
+
+          <Separator
+            orientation="vertical"
+            className="shrink-0 data-vertical:h-4 data-vertical:self-auto"
           />
 
-          <Script id="google-analytics" strategy="afterInteractive">
-            {`
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){window.dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', '${site.googleAnalyticsId}');
-      `}
-          </Script>
-        </>
-      )}
-      {/* Google Site Verification */}
-      {process.env.VERCEL_ENV === "production" && site.googleSiteVerification && (
-        <meta
-          name="google-site-verification"
-          content={site.googleSiteVerification}
-        />
-      )}
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <Breadcrumbnav />
+          </div>
 
-      {process.env.VERCEL_ENV === "production" &&
-        site.adLinks
-          .filter((ad) => ad.position === "head" && ad.isActive)
-          .map((ad) => (
-            <Script key={ad.id} src={ad.url} strategy="lazyOnload" />
-          ))}
+          <div className="w-[140px] shrink-0 sm:w-auto">
+            <SearchField />
+          </div>
+        </header>
+     
+        <div className="w-full min-w-0 max-w-full">
+          {/* Google Analytics */}
+          {process.env.VERCEL_ENV === "production" &&
+            site.googleAnalyticsId && (
+              <>
+                <Script
+                  src={`https://www.googletagmanager.com/gtag/js?id=${site.googleAnalyticsId}`}
+                  strategy="afterInteractive"
+                />
 
-      <div className="m-0 w-full p-0">
-        <Navbar site={site} />
+                <Script id="google-analytics" strategy="afterInteractive">
+                  {`
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){window.dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${site.googleAnalyticsId}');
+                `}
+                </Script>
+              </>
+            )}
 
-        {process.env.VERCEL_ENV === "production" && (
-          <AdsSection ads={ads} position="head" />
-        )}
-        {children}
-        {process.env.VERCEL_ENV === "production" && (
-          <AdsSection ads={ads} position="body" />
-        )}
-        <Footer site={site} />
-      </div>
+          {/* Google Site Verification */}
+          {process.env.VERCEL_ENV === "production" &&
+            site.googleSiteVerification && (
+              <meta
+                name="google-site-verification"
+                content={site.googleSiteVerification}
+              />
+            )}
 
-      {process.env.VERCEL_ENV === "production" &&
-        site.adLinks
-          .filter((ad) => ad.position === "body" && ad.isActive)
-          .map((ad) => (
-            <Script key={ad.id} src={ad.url} strategy="lazyOnload" />
-          ))}
-    </div>
+          {/* Head Ad Scripts */}
+          {process.env.VERCEL_ENV === "production" &&
+            site.adLinks
+              .filter((ad) => ad.position === "head" && ad.isActive)
+              .map((ad) => (
+                <Script key={ad.id} src={ad.url} strategy="lazyOnload" />
+              ))}
+
+          {process.env.VERCEL_ENV === "production" && (
+            <AdsSection ads={ads} position="head" />
+          )}
+
+          {children}
+
+          {process.env.VERCEL_ENV === "production" && (
+            <AdsSection ads={ads} position="body" />
+          )}
+          {/* Body Ad Scripts */}
+          {process.env.VERCEL_ENV === "production" &&
+            site.adLinks
+              .filter((ad) => ad.position === "body" && ad.isActive)
+              .map((ad) => (
+                <Script key={ad.id} src={ad.url} strategy="lazyOnload" />
+              ))}
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

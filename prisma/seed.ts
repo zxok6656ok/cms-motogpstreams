@@ -1,3 +1,4 @@
+
 import { PrismaClient, Prisma } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import "dotenv/config";
@@ -6,84 +7,233 @@ const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
 });
 
-const prisma = new PrismaClient({
-  adapter,
-});
+const prisma = new PrismaClient({ adapter });
 
-const siteName = "LIVEMOTOGP";
+const siteName = "Example Portal";
 
-const streamData: Prisma.StreamCreateInput[] = [
+const siteSettingData: Prisma.SiteSettingCreateInput = {
+  siteName,
+  title: "Example Portal - Streaming & Downloads",
+  description:
+    "Portal demo untuk streaming, artikel, dan download dengan berbagai pilihan kualitas.",
+  siteUrl: "https://example.com",
+  logo: "https://placehold.co/300x100?text=Example+Portal",
+  favicon: "https://placehold.co/64x64?text=EP",
+  ogImage: "https://placehold.co/1200x630?text=Example+Portal",
+  metaTitle: "Example Portal - Streaming & Downloads",
+  metaDescription:
+    "Portal demo untuk menampilkan artikel, streaming, dan link download.",
+  playerNoticeTitle: "Player Bermasalah?",
+  playerNoticeDescription:
+    "Periksa koneksi internet atau coba gunakan browser lain.",
+  telegramTitle: "Gabung Komunitas",
+  telegramDescription: "Informasi dan pembaruan terbaru.",
+  googleAnalyticsId: null,
+  googleSiteVerification: null,
+
+  socialLinks: {
+    create: [
+      {
+        name: "Example Facebook",
+        platform: "facebook",
+        url: "https://example.com/facebook",
+      },
+      {
+        name: "Example Telegram",
+        platform: "telegram",
+        url: "https://example.com/telegram",
+      },
+      {
+        name: "Example YouTube",
+        platform: "youtube",
+        url: "https://example.com/youtube",
+      },
+      {
+        name: "Example X",
+        platform: "twitter",
+        url: "https://example.com/x",
+      },
+    ],
+  },
+
+  navbarItems: {
+    create: [
+      { name: "Home", url: "/", order: 0 },
+      { name: "Streaming", url: "/streaming", order: 1 },
+      { name: "Downloads", url: "/downloads", order: 2 },
+      { name: "Telegram", url: "https://example.com/community", order: 3 },
+    ],
+  },
+
+  footerItems: {
+    create: [
+      { name: "About", url: "/about", order: 0 },
+      { name: "Privacy Policy", url: "/privacy", order: 1 },
+      { name: "Disclaimer", url: "/disclaimer", order: 2 },
+      { name: "Terms & Conditions", url: "/terms", order: 3 },
+    ],
+  },
+
+  adLinks: {
+    create: [
+      {
+        name: "Demo Ad Header",
+        url: "https://example.com/ad-header.js",
+        order: 0,
+        position: "head",
+        isActive: false,
+      },
+      {
+        name: "Demo Ad Body",
+        url: "https://example.com/ad-body.js",
+        order: 1,
+        position: "body",
+        isActive: false,
+      },
+    ],
+  },
+
+  hero: {
+    create: {
+      badge: "WELCOME",
+      title: "EXAMPLE",
+      subtitle: "PORTAL",
+      year: "2026",
+      description:
+        "Portal demo untuk streaming, artikel, dan download.",
+      primaryButtonText: "JELAJAHI SEKARANG",
+      primaryButtonUrl: "/",
+      secondaryButtonText: "Selengkapnya",
+      secondaryButtonUrl: "/about",
+    },
+  },
+};
+
+const adWidgetData: Prisma.AdWidgetCreateInput[] = [
   {
-    name: "Server 1",
-    type: "hls",
-    url: "https://cdn.strea.ru/index_src/index.m3u8",
+    name: "DEMO HEADER",
+    htmlCode: '<div class="demo-ad">Header Advertisement</div>',
+    scriptCode: null,
+    position: "head",
+    order: 0,
+    isActive: false,
+    height: 90,
+    maxWidth: "full",
+    mobileOnly: false,
+    showClose: false,
   },
   {
-    name: "Server 2",
-    type: "dash",
-    url: "https://qp-pldt-live-grp-13-prod.akamaized.net/out/u/dr_spotv2hd.mpd",
-    drmId: "7eea72d6075245a99ee3255603d58853",
-    drmKey: "6848ef60575579bf4d415db1032153ed",
-  },
-  {
-    name: "Server 3",
-    type: "hls",
-    url: "https://s1.strea.ru/index.m3u8",
-  },
-  {
-    name: "Server 4",
-    type: "hls",
-    url: "https://s2.strea.ru/index.m3u8",
+    name: "DEMO BODY",
+    htmlCode: '<div class="demo-ad">Body Advertisement</div>',
+    scriptCode: null,
+    position: "body",
+    order: 0,
+    isActive: false,
+    height: 90,
+    maxWidth: "full",
+    mobileOnly: false,
+    showClose: false,
   },
 ];
 
 const articleData = [
   {
-    title: "Live Streaming MotoGP",
-    slug: "live-streaming-motogp",
-    content: "",
-    streamNames: ["Server 1", "Server 2"],
+    title: "Demo Live Streaming",
+    slug: "demo-live-streaming",
+    metaDescription: "Contoh artikel streaming dengan beberapa server.",
+    content: `
+      <h2>Demo Live Streaming</h2>
+      <p>Ini adalah artikel contoh untuk pengujian CMS.</p>
+    `,
+    uploadBy: "Demo Admin",
     categories: [
+      { name: "Streaming", slug: "streaming" },
+      { name: "Entertainment", slug: "entertainment" },
+    ],
+    iframe: [
       {
-        name: "Live MotoGP",
-        slug: "live-motogp",
+        title: "Demo Server 1",
+        src: "https://example.com/player-1",
+        isActive: true,
       },
       {
-        name: "Live WSBK",
-        slug: "live-wsbk",
+        title: "Demo Server 2",
+        src: "https://example.com/player-2",
+        isActive: false,
+      },
+    ],
+    download: [
+      {
+        quality: "[1080p]",
+        isActive: true,
+        order: 0,
+        links: [
+          {
+            name: "Mirror 1",
+            url: "https://example.com/download-1080-1",
+            isActive: true,
+            order: 0,
+          },
+          {
+            name: "Mirror 2",
+            url: "https://example.com/download-1080-2",
+            isActive: true,
+            order: 1,
+          },
+          {
+            name: "Mirror 3",
+            url: "https://example.com/download-1080-3",
+            isActive: false,
+            order: 2,
+          },
+        ],
+      },
+      {
+        quality: "[720p]",
+        isActive: true,
+        order: 1,
+        links: [
+          {
+            name: "Mirror 1",
+            url: "https://example.com/download-720-1",
+            isActive: true,
+            order: 0,
+          },
+          {
+            name: "Mirror 2",
+            url: "https://example.com/download-720-2",
+            isActive: true,
+            order: 1,
+          },
+        ],
+      },
+      {
+        quality: "[480p]",
+        isActive: false,
+        order: 2,
+        links: [
+          {
+            name: "Mirror 1",
+            url: "https://example.com/download-480-1",
+            isActive: true,
+            order: 0,
+          },
+        ],
       },
     ],
   },
-];
-
-const adWidgetData: Prisma.AdWidgetCreateInput[] = [
   {
-    name: "ADS HEADER",
-    htmlCode:
-      '<style> div[data-widget-id="1967942"] { min-height: 300px; } </style><div data-type="_mgwidget" data-widget-id="1967942"></div>',
-    scriptCode:
-      '<script>(function(w,q){w[q]=w[q]||[];w[q].push(["_mgc.load"])})(window,"_mgq");</script>',
-    position: "head",
-    order: 0,
-    isActive: true,
-    height: 200,
-    maxWidth: "full",
-    mobileOnly: false,
-    showClose: false,
-  },
-  {
-    name: "ADS BODY",
-    htmlCode:
-      '<style> div[data-widget-id="1978335"] { min-height: 300px; } </style><div data-type="_mgwidget" data-widget-id="1978335"></div>',
-    scriptCode:
-      '<script>(function(w,q){w[q]=w[q]||[];w[q].push(["_mgc.load"])})(window,"_mgq");</script>',
-    position: "body",
-    order: 0,
-    isActive: true,
-    height: 200,
-    maxWidth: "full",
-    mobileOnly: false,
-    showClose: false,
+    title: "Demo Article Kedua",
+    slug: "demo-article-kedua",
+    metaDescription: "Artikel dummy kedua untuk pengujian.",
+    content: `
+      <h2>Demo Article Kedua</h2>
+      <p>Konten contoh untuk menguji daftar artikel.</p>
+    `,
+    uploadBy: "Demo Admin",
+    categories: [{ name: "Tutorial", slug: "tutorial" }],
+    iframe: [],
+    download: [],
   },
 ];
 
@@ -92,10 +242,8 @@ const pageData: Prisma.PageCreateInput[] = [
     slug: "about",
     title: "About",
     content: `
-      <h2>Tentang LIVEMOTOGP</h2>
-      <p>
-        LIVEMOTOGP adalah situs nonton live streaming MotoGP.
-      </p>
+      <h2>Tentang Example Portal</h2>
+      <p>Ini adalah halaman informasi untuk situs demo.</p>
     `,
   },
   {
@@ -103,69 +251,11 @@ const pageData: Prisma.PageCreateInput[] = [
     title: "Privacy Policy",
     content: `
       <h2>Privacy Policy</h2>
-
-      <p>
-        Privasi pengunjung merupakan hal yang penting bagi LIVEMOTOGP.
-        Kebijakan Privasi ini menjelaskan bagaimana informasi dapat
-        dikumpulkan, digunakan, dan dilindungi ketika Anda mengakses
-        situs LIVEMOTOGP.
-      </p>
-
+      <p>Halaman contoh kebijakan privasi.</p>
       <h3>Informasi yang Dikumpulkan</h3>
-
-      <p>
-        LIVEMOTOGP dapat mengumpulkan informasi tertentu secara otomatis,
-        seperti alamat IP, jenis perangkat, browser, halaman yang dikunjungi,
-        serta informasi teknis lainnya yang diperlukan untuk meningkatkan
-        keamanan dan pengalaman pengguna.
-      </p>
-
-      <h3>Penggunaan Informasi</h3>
-
-      <p>
-        Informasi yang dikumpulkan dapat digunakan untuk mengoperasikan,
-        memelihara, dan meningkatkan layanan, menganalisis penggunaan situs,
-        serta menjaga keamanan situs dari aktivitas yang tidak sah.
-      </p>
-
+      <p>Jelaskan informasi yang dikumpulkan oleh situs.</p>
       <h3>Cookies</h3>
-
-      <p>
-        LIVEMOTOGP dapat menggunakan cookies atau teknologi serupa untuk
-        menyimpan preferensi pengguna, memahami penggunaan situs, dan
-        meningkatkan pengalaman pengunjung.
-      </p>
-
-      <h3>Layanan Pihak Ketiga</h3>
-
-      <p>
-        Situs ini dapat menggunakan layanan pihak ketiga seperti layanan
-        analitik, iklan, atau layanan eksternal lainnya. Pihak ketiga
-        tersebut dapat memiliki kebijakan privasi mereka sendiri.
-      </p>
-
-      <h3>Keamanan</h3>
-
-      <p>
-        Kami berusaha menerapkan langkah-langkah yang wajar untuk melindungi
-        informasi yang tersedia pada situs. Namun, tidak ada metode
-        transmisi atau penyimpanan data melalui internet yang dapat
-        dijamin sepenuhnya aman.
-      </p>
-
-      <h3>Perubahan Kebijakan Privasi</h3>
-
-      <p>
-        LIVEMOTOGP dapat memperbarui Kebijakan Privasi ini dari waktu ke waktu.
-        Setiap perubahan akan diterapkan pada halaman ini.
-      </p>
-
-      <h3>Hubungi Kami</h3>
-
-      <p>
-        Jika Anda memiliki pertanyaan mengenai Kebijakan Privasi ini,
-        silakan menghubungi LIVEMOTOGP melalui kontak yang tersedia di situs.
-      </p>
+      <p>Jelaskan penggunaan cookies dan layanan pihak ketiga.</p>
     `,
   },
   {
@@ -173,17 +263,7 @@ const pageData: Prisma.PageCreateInput[] = [
     title: "Disclaimer",
     content: `
       <h2>Disclaimer</h2>
-
-      <p>
-        Informasi yang tersedia di LIVEMOTOGP disediakan untuk tujuan
-        informasi dan hiburan.
-      </p>
-
-      <p>
-        Kami berusaha menjaga informasi yang tersedia tetap akurat,
-        namun tidak menjamin seluruh informasi selalu lengkap atau bebas
-        dari kesalahan.
-      </p>
+      <p>Halaman contoh disclaimer situs.</p>
     `,
   },
   {
@@ -191,220 +271,63 @@ const pageData: Prisma.PageCreateInput[] = [
     title: "Terms & Conditions",
     content: `
       <h2>Terms & Conditions</h2>
-
-      <p>
-        Dengan mengakses dan menggunakan LIVEMOTOGP, Anda menyetujui
-        ketentuan yang berlaku di situs ini.
-      </p>
-
-      <p>
-        Pengguna bertanggung jawab atas penggunaan informasi dan layanan
-        yang tersedia di situs.
-      </p>
+      <p>Halaman contoh syarat dan ketentuan penggunaan situs.</p>
     `,
   },
 ];
 
-const siteSettingData: Prisma.SiteSettingCreateInput = {
-  siteName,
-  title: `${siteName}`,
-  description: `${siteName} adalah situs untuk nonton live streaming MotoGP 2026 terbaru dengan link siaran langsung MotoGP, Moto2, Moto3, dan WSBK 2026 kualitas HD. Saksikan race MotoGP, sprint race MotoGP, warm up, FP, practice, Q1, hingga Q2 MotoGP secara online dengan update terbaru setiap seri balapan.`,
-  siteUrl: "https://www.livemotogp.com",
-  logo: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgHmCHohPlGvpTszWLefZK9gh8g5oxbuUVxsBA50zV5bB9mSZHo_xTnCpxu4WxpnFe91liZeSEgC0zAIPfUHFqDJledrPAsUbrw6L-2e72lI3y0TfKKOTswyKD_NHrQjCxa4qAjTYMyEjr5cq3jOIQorzExhljYazb9yu26TxBzj8k5aiI_XLUfChDaaSM/s1774/16949.png",
-  favicon:
-    "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgHmCHohPlGvpTszWLefZK9gh8g5oxbuUVxsBA50zV5bB9mSZHo_xTnCpxu4WxpnFe91liZeSEgC0zAIPfUHFqDJledrPAsUbrw6L-2e72lI3y0TfKKOTswyKD_NHrQjCxa4qAjTYMyEjr5cq3jOIQorzExhljYazb9yu26TxBzj8k5aiI_XLUfChDaaSM/s1774/16949.png",
-  ogImage:
-    "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgHmCHohPlGvpTszWLefZK9gh8g5oxbuUVxsBA50zV5bB9mSZHo_xTnCpxu4WxpnFe91liZeSEgC0zAIPfUHFqDJledrPAsUbrw6L-2e72lI3y0TfKKOTswyKD_NHrQjCxa4qAjTYMyEjr5cq3jOIQorzExhljYazb9yu26TxBzj8k5aiI_XLUfChDaaSM/s1774/16949.png",
-  metaTitle: `${siteName} - Live Streaming MotoGP 2026`,
-  metaDescription: `${siteName} adalah situs untuk nonton live streaming MotoGP 2026 terbaru dengan link siaran langsung MotoGP, Moto2, Moto3, dan WSBK 2026 kualitas HD. Saksikan race MotoGP, sprint race MotoGP, warm up, FP, practice, Q1, hingga Q2 MotoGP secara online dengan update terbaru setiap seri balapan.`,
-  playerNoticeDescription:
-    "Coba gunakan Google Chrome untuk pengalaman menonton yang lebih optimal. Jika video masih tidak dapat diputar atau mengalami error, silakan bergabung ke Telegram untuk mendapatkan bantuan dan link alternatif.",
-  playerNoticeTitle: "Player Bermasalah?",
-  telegramDescription: "Link channel telegram",
-  telegramTitle: "Gabung Telegram",
-  googleAnalyticsId: "G-G3KNCQ8N7G",
-  googleSiteVerification: "xVjUOmyMEh47V9G9RsUsjdBI1_TsLi8zG1qkIXS--kU",
-  socialLinks: {
-    create: [
-      {
-        name: "LIVEMOTOGP X",
-        platform: "twitter",
-        url: "https://x.com/nontonmotogp",
-      },
-      {
-        name: "LIVEMOTOGP Telegram",
-        platform: "telegram",
-        url: "https://t.me/+qMM92ZK59mVmYzg1",
-      },
-      {
-        name: "LIVEMOTOGP Facebook",
-        platform: "facebook",
-        url: "https://www.facebook.com/livemotogpnet",
-      },
-      {
-        name: "LIVEMOTOGP YouTube",
-        platform: "youtube",
-        url: "https://youtube.com/@livemotogpnet",
-      },
-      {
-        name: "LIVEMOTOGP TikTok",
-        platform: "tiktok",
-        url: "https://t.me/+qMM92ZK59mVmYzg1",
-      },
-    ],
-  },
-
-  navbarItems: {
-    create: [
-      {
-        name: "Home",
-        url: "/",
-        order: 0,
-      },
-      {
-        name: "Live MotoGP",
-        url: "/2026/08/23/live-streaming-motogp",
-        order: 1,
-      },
-      {
-        name: "Link Back Up",
-        url: "https://www.zvstreams.com/p/live-streaming-motogp.html",
-        order: 2,
-      },
-      {
-        name: "Telegram",
-        url: "https://t.me/+qMM92ZK59mVmYzg1",
-        order: 3,
-      },
-    ],
-  },
-
-  footerItems: {
-    create: [
-      {
-        name: "About",
-        url: "/about",
-        order: 0,
-      },
-      {
-        name: "Privacy Policy",
-        url: "/privacy",
-        order: 1,
-      },
-      {
-        name: "Disclaimer",
-        url: "/disclaimer",
-        order: 2,
-      },
-      {
-        name: "Contact",
-        url: "https://t.me/+qMM92ZK59mVmYzg1",
-        order: 3,
-      },
-      {
-        name: "Terms & Conditions",
-        url: "/terms",
-        order: 4,
-      },
-    ],
-  },
-
-  adLinks: {
-    create: [
-      {
-        name: "Mgid",
-        url: "https://jsc.mgid.com/site/986312.js",
-        order: 1,
-        position: "head",
-        isActive: true,
-      },
-      {
-        name: "Adsterra social bar",
-        url: "https://birchalibis.com/8e/9d/37/8e9d37d13bce33fd36e49421cfd5bc7b.js",
-        order: 2,
-        position: "body",
-        isActive: false,
-      },
-      {
-        name: "Adsterra",
-        url: "https://birchalibis.com/01/40/c7/0140c7f2b4b2a1bb3e8b3837c856198a.js",
-        order: 0,
-        position: "head",
-        isActive: true,
-      },
-    ],
-  },
-
-  hero: {
-    create: {
-      badge: "LIVE STREAMING",
-      title: "LIVE",
-      subtitle: "MOTOGP",
-      year: "2026",
-      description:
-        "MOTOGPSTREAMS adalah situs untuk nonton live streaming MotoGP 2026 terbaru dengan link siaran langsung MotoGP, Moto2, Moto3, dan WSBK 2026 kualitas HD.",
-      primaryButtonText: "TONTON SEKARANG",
-      primaryButtonUrl: "/2026/08/23/live-streaming-motogp",
-      secondaryButtonText: "Telegram",
-      secondaryButtonUrl: "https://t.me/+qMM92ZK59mVmYzg1",
-    },
-  },
-};
-
 export async function main() {
   try {
     /*
-     * Site Setting
+     * Site Settings
      */
     await prisma.siteSetting.create({
       data: siteSettingData,
     });
 
     /*
-     * Streams
-     *
-     * Stream dibuat terlebih dahulu karena
-     * Stream sekarang berdiri sendiri.
+     * Ad Widgets
      */
-    const streams = await Promise.all(
-      streamData.map((stream) =>
-        prisma.stream.create({
-          data: stream,
-        }),
-      ),
-    );
+    for (const widget of adWidgetData) {
+      await prisma.adWidget.create({
+        data: widget,
+      });
+    }
 
     /*
-     * Articles
-     *
-     * Artikel kemudian menghubungkan stream
-     * yang sudah dibuat.
+     * Categories, Articles, Iframes & Downloads
      */
-    for (const article of articleData) {
-      const streamRecords = streams.filter((stream) =>
-        article.streamNames.includes(stream.name),
-      );
-
+    for (const item of articleData) {
       await prisma.article.create({
         data: {
-          title: article.title,
-          slug: article.slug,
-          content: article.content,
-
-          streams: {
-            connect: streamRecords.map((stream) => ({
-              id: stream.id,
-            })),
-          },
+          title: item.title,
+          slug: item.slug,
+          metaDescription: item.metaDescription,
+          content: item.content,
+          uploadBy: item.uploadBy,
 
           categories: {
-            connectOrCreate: article.categories.map((category) => ({
-              where: {
-                slug: category.slug,
-              },
+            connectOrCreate: item.categories.map((category) => ({
+              where: { slug: category.slug },
               create: {
                 name: category.name,
                 slug: category.slug,
+              },
+            })),
+          },
+
+          iframe: {
+            create: item.iframe,
+          },
+
+          download: {
+            create: item.download.map((download) => ({
+              quality: download.quality,
+              isActive: download.isActive,
+              order: download.order,
+
+              links: {
+                create: download.links,
               },
             })),
           },
@@ -413,7 +336,7 @@ export async function main() {
     }
 
     /*
-     * Pages
+     * Static Pages
      */
     for (const page of pageData) {
       await prisma.page.create({
@@ -424,10 +347,12 @@ export async function main() {
     console.log("Seed completed successfully.");
   } catch (error) {
     console.error("Seed failed:", error);
-    process.exit(1);
+    throw error;
   } finally {
     await prisma.$disconnect();
   }
 }
 
-main();
+main().catch(() => {
+  process.exitCode = 1;
+});

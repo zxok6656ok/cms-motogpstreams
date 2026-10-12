@@ -1,0 +1,111 @@
+import { Metadata } from "next";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+
+
+import { getSiteSeo } from "../../../../lib/site";
+import { List } from "lucide-react";
+import { getAllGenres } from "../../../../lib/genres";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const site = await getSiteSeo();
+
+  const title = `Genres - ${site.siteName}`;
+
+  const description =
+    `Browse all Genres on ${site.siteName}. ` +
+    `Find content by genres.`;
+
+  const canonical = `${site.siteUrl}/genres`;
+
+  return {
+    title,
+
+    description,
+
+    alternates: {
+      canonical,
+    },
+
+    robots: {
+      index: true,
+      follow: true,
+    },
+
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url: canonical,
+      siteName: site.siteName,
+
+      images: site.ogImage
+        ? [
+            {
+              url: site.ogImage,
+              width: 1200,
+              height: 630,
+              alt: title,
+            },
+          ]
+        : undefined,
+    },
+
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+
+      images: site.ogImage ? [site.ogImage] : undefined,
+    },
+  };
+}
+
+export default async function GenresPage() {
+  const genres = await getAllGenres();
+
+  if (genres.length === 0) {
+    notFound();
+  }
+
+  return (
+      <div className="w-full bg-white">
+      <main className="mx-auto px-2  py-2">
+        <section className="mb-10 px-2 py-1 sm:py-2 sm:mb-24">
+          <div className="mx-auto w-full">
+            <div className="min-w-0  max-w-full rounded-lg border bg-white px-3 py-2 text-sm text-muted-foreground">
+              <div className="mb-0 flex items-center gap-2 uppercase text-sm text-muted-foreground">
+                <List className="size-4" />
+                <span>genre list</span>
+              </div>
+            </div>
+            {genres.length > 0 ? (
+              <div className="mt-4 mb-4 flex min-h-8 flex-wrap gap-2">
+                {genres.map((genre) => (
+                  <Link key={genre.slug} href={`/genres/${genre.slug}`}>
+                    <span className="flex min-w-0 max-w-full items-center gap-2 rounded-lg border bg-black px-3 py-2 text-sm text-white">
+                      {genre.name}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div
+                className="
+              border-4 border-black
+              bg-white
+              p-10
+              text-center
+              font-black
+              shadow-[7px_7px_0_#000]
+            "
+              >
+                There are no genre yet.
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}

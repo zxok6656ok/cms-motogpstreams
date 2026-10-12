@@ -29,14 +29,13 @@ import { saveArticle } from "../action";
 import { toast } from "@/components/ui/toast";
 import { useRouter } from "next/navigation";
 import { ExistingStream } from "./table";
-
+import { Switch } from "@/components/ui/switch";
 const formSchema = z.object({
   title: z
     .string()
     .min(5, "Title must be at least 5 characters.")
     .max(150, "Title must be at most 150 characters."),
   thumbnail: z.string().min(1, "Thumbnail is required"),
-  poster: z.string().optional(),
   status: z.enum(["publish", "draft"]),
   slug: z
     .string()
@@ -53,103 +52,120 @@ const formSchema = z.object({
     .string()
     .max(160, "Meta description must be at most 160 characters.")
     .optional(),
-
   categories: z.string(),
-
-  streams: z.array(
+  genres: z.string(),
+  iframe: z.array(
     z.object({
       id: z.string().optional(),
-      name: z.string(),
-      type: z.enum(["hls", "dash"]),
-      url: z.string(),
-      drmId: z.string().optional(),
-      drmKey: z.string().optional(),
-      directLink: z.string().optional(),
-      directLinkActive: z.boolean(),
+      title: z.string(),
+      src: z.string(),
+      isActive: z.boolean(),
     }),
   ),
-
-  content: z.string().max(50000, "Article is too long, maximum 50,000 characters").optional()
-
+  download: z.array(
+    z.object({
+      id: z.string().optional(),
+      quality: z.string(),
+      links: z.array(
+        z.object({
+          id: z.string().optional(),
+          name: z.string(),
+          url: z.string(),
+          isActive: z.boolean(),
+        }),
+      ),
+      isActive: z.boolean(),
+    }),
+  ),
+  content: z
+    .string()
+    .max(50000, "Article is too long, maximum 50,000 characters")
+    .optional(),
 });
-
 type FormPostsProps = {
   setOpen: (open: boolean) => void;
   type: "edit" | "add";
   open: boolean;
   article: Article | null;
-  streams: ExistingStream[];
+  iframe: ExistingStream[];
+  downloads?: {
+    id: string;
+    quality: string;
+    isActive?: boolean;
+    links: { id: string; name: string; url: string; isActive?: boolean }[];
+  }[];
 };
-
 const FormPosts = ({
   open,
   setOpen,
   article,
   type,
-  streams,
+  iframe,
+  downloads,
 }: FormPostsProps) => {
   const [selectedStreamId, setSelectedStreamId] = useState("");
+  const [selectedDownloadId, setSelectedDownloadId] = useState("");
   const slugTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
-  const [uploadBy, setUploadBy] = useState<string>("");
-
+  const [uploadBy, setUploadBy] = useState<string>("ZZZ");
   const defaultValues = {
     title: "",
     thumbnail: "",
-    poster: "",
     slug: "",
     metaDescription: "",
     status: "publish" as const,
     uploadBy: uploadBy,
     categories: "",
-    streams: [],
+    genres: "",
+    iframe: [],
+    download: [],
     content: "",
   };
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
-
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "streams",
+    name: "iframe",
   });
 
+  const {
+    fields: downloadFields,
+    append: appendDownload,
+    remove: removeDownload,
+  } = useFieldArray({
+    control: form.control,
+    name: "download",
+  });
   const { setValue } = form;
-
   const setSlug = async (val: string) => {
     const slug = await createSlug("article", val, 50);
-
     setValue("slug", slug, {
       shouldValidate: true,
       shouldDirty: true,
     });
   };
-
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       const formData = new FormData();
-
       formData.append("title", data.title);
       formData.append("uploadBy", data.uploadBy);
       formData.append("thumbnail", data.thumbnail);
-      formData.append("poster", data.poster ?? "");
       formData.append("slug", data.slug);
       formData.append("metaDescription", data.metaDescription ?? "");
       formData.append("categories", data.categories);
+      formData.append("genres", data.genres);
       formData.append("status", data.status);
       formData.append("content", data.content ?? "");
-      formData.append("streams", JSON.stringify(data.streams));
-
+      formData.append("iframe", JSON.stringify(data.iframe));
+      formData.append("download", JSON.stringify(data.download));
       const { message } = await saveArticle(
         formData,
         type === "add" ? null : article?.id,
       );
-
       setOpen(false);
       router.refresh();
-
       toast.add({
         type: "success",
         description: message,
@@ -165,7 +181,6 @@ const FormPosts = ({
       });
     }
   };
-
   useEffect(() => {
     return () => {
       if (slugTimeout.current) {
@@ -173,68 +188,66 @@ const FormPosts = ({
       }
     };
   }, []);
-
   useEffect(() => {
     if (!open) {
       form.reset(defaultValues);
       return;
     }
-
     if (type === "add") {
       form.reset(defaultValues);
       return;
     }
-
     if (type === "edit" && article) {
       form.reset({
         title: article.title ?? "",
         slug: article.slug ?? "",
         thumbnail: article.thumbnail ?? "",
-        poster: article.poster ?? "",
         status: article.status ?? "publish",
         uploadBy: article.uploadBy ?? uploadBy,
         metaDescription: article.metaDescription ?? "",
         categories:
           article.categories?.map((category) => category.name).join(", ") ?? "",
-
-        streams:
-          article.streams?.map((stream) => ({
+        genres: article.genres?.map((genre) => genre.name).join(", ") ?? "",
+        iframe:
+          article.iframe?.map((stream) => ({
             id: stream.id,
-            name: stream.name,
-            type: stream.type,
-            url: stream.url,
-            drmId: stream.drmId ?? "",
-            drmKey: stream.drmKey ?? "",
-            directLink: stream.directLink ?? "",
-            directLinkActive: stream.directLinkActive ?? false,
+            title: stream.title,
+            src: stream.src,
+            isActive: stream.isActive ?? false,
           })) ?? [],
-
+        download:
+          article.download?.map((item) => ({
+            id: item.id,
+            quality: item.quality,
+            links:
+              item.links?.map((link) => ({
+                id: link.id,
+                name: link.name,
+                url: link.url,
+                isActive: link.isActive ?? false,
+              })) ?? [],
+            isActive: item.isActive ?? false,
+          })) ?? [],
         content: article.content ?? "",
       });
     }
   }, [open, type, article]);
-
   useEffect(() => {
     async function getProfile() {
       const supabase = createClient();
-
       const {
         data: { user },
       } = await supabase.auth.getUser();
-
       if (user) {
-        const name = user.user_metadata?.display_name ?? "X";
+        const name = user.user_metadata?.display_name ?? "ZZZ";
         setUploadBy(name);
-
         if (type === "add") {
           form.setValue("uploadBy", name);
         }
       }
     }
-
     getProfile();
   }, [form, type]);
-
   return (
     <div>
       <Modal
@@ -253,7 +266,6 @@ const FormPosts = ({
             >
               {form.formState.isSubmitting ? "Saving..." : "Save Post"}
             </Button>
-
             <Button
               type="button"
               variant="outline"
@@ -262,7 +274,6 @@ const FormPosts = ({
             >
               Close
             </Button>
-
             <Button
               type="button"
               variant="destructive"
@@ -287,7 +298,6 @@ const FormPosts = ({
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="article-form-title">Title</FieldLabel>
-
                     <Input
                       {...field}
                       id="article-form-title"
@@ -297,31 +307,26 @@ const FormPosts = ({
                       autoComplete="off"
                       onChange={(event) => {
                         field.onChange(event);
-
                         if (slugTimeout.current) {
                           clearTimeout(slugTimeout.current);
                         }
-
                         slugTimeout.current = setTimeout(() => {
                           setSlug(event.target.value);
                         }, 500);
                       }}
                     />
-
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
                   </Field>
                 )}
               />
-
               <Controller
                 name="slug"
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="article-form-slug">Slug</FieldLabel>
-
                     <Input
                       {...field}
                       id="article-form-slug"
@@ -331,7 +336,6 @@ const FormPosts = ({
                       placeholder="slug-posts"
                       autoComplete="off"
                     />
-
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -339,7 +343,6 @@ const FormPosts = ({
                 )}
               />
             </div>
-
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Controller
                 name="thumbnail"
@@ -347,82 +350,48 @@ const FormPosts = ({
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel>URL Thumbnail</FieldLabel>
-
                     <Input
                       {...field}
                       type="url"
-                      placeholder="https://example.com/"
+                      placeholder="https\://example.com/"
                       className="rounded-sm"
                       aria-invalid={fieldState.invalid}
                     />
-
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
                   </Field>
                 )}
               />
-
-              <Controller
-                name="poster"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>URL Poster</FieldLabel>
-
-                    <Input
-                      {...field}
-                      type="url"
-                      placeholder="https://example.com/"
-                      className="rounded-sm"
-                      aria-invalid={fieldState.invalid}
-                    />
-
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
-
               <Controller
                 name="status"
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>Status</FieldLabel>
-
-                    <Select
-                      value={field.value}
-                      onValueChange={(value) =>
-                        field.onChange(value as "publish" | "draft")
-                      }
-                    >
-                      <SelectTrigger
-                        className="rounded-sm"
+                    <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                      <div className="space-y-1">
+                        <FieldLabel htmlFor="article-status">
+                          Status Artikel
+                        </FieldLabel>
+                        <p className="text-sm text-muted-foreground">
+                          {field.value === "publish" ? "Publish" : "Draft"}
+                        </p>
+                      </div>
+                      <Switch
+                        id="article-status"
+                        checked={field.value === "publish"}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked ? "publish" : "draft")
+                        }
                         aria-invalid={fieldState.invalid}
-                      >
-                        <SelectValue placeholder="Pilih status" />
-                      </SelectTrigger>
-
-                      <SelectContent className="rounded-sm">
-                        <SelectItem value="publish" className="rounded-sm">
-                          Publish
-                        </SelectItem>
-
-                        <SelectItem value="draft" className="rounded-sm">
-                          Draft
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-
+                      />
+                    </div>
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
                   </Field>
                 )}
               />
-
               <Controller
                 name="uploadBy"
                 control={form.control}
@@ -431,7 +400,6 @@ const FormPosts = ({
                     <FieldLabel htmlFor="article-form-upload-by">
                       Upload By
                     </FieldLabel>
-
                     <Input
                       {...field}
                       id="article-form-upload-by"
@@ -440,7 +408,6 @@ const FormPosts = ({
                       placeholder="X"
                       autoComplete="off"
                     />
-
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -448,7 +415,6 @@ const FormPosts = ({
                 )}
               />
             </div>
-
             <Controller
               name="metaDescription"
               control={form.control}
@@ -457,7 +423,6 @@ const FormPosts = ({
                   <FieldLabel htmlFor="article-form-description">
                     Meta Description
                   </FieldLabel>
-
                   <Textarea
                     {...field}
                     id="article-form-description"
@@ -466,82 +431,65 @@ const FormPosts = ({
                     className="resize-y rounded-sm"
                     aria-invalid={fieldState.invalid}
                   />
-
                   <FieldDescription>
                     A short description for search engines.
                   </FieldDescription>
-
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}
                 </Field>
               )}
             />
-
             <Field>
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <FieldLabel>Streaming URLs</FieldLabel>
-
                   <FieldDescription>
                     Pilih stream yang sudah ada atau buat stream baru.
                   </FieldDescription>
                 </div>
               </div>
-
               <div className="mt-3 flex gap-2">
                 <Select
                   value={selectedStreamId}
                   onValueChange={(value) => {
-                    const stream = streams.find((item) => item.id === value);
-
+                    const stream = iframe.find((item) => item.id === value);
                     if (!stream) return;
-
                     const alreadyExists = form
-                      .getValues("streams")
+                      .getValues("iframe")
                       .some((item) => item.id === stream.id);
-
                     if (alreadyExists) {
                       toast.add({
                         type: "error",
                         description: "Stream sudah ditambahkan.",
                       });
-
                       setSelectedStreamId("");
                       return;
                     }
-
                     append({
                       id: stream.id,
-                      name: stream.name,
-                      type: stream.type,
-                      url: stream.url,
-                      drmId: stream.drmId ?? "",
-                      drmKey: stream.drmKey ?? "",
-                      directLink: stream.directLink ?? "",
-                      directLinkActive: stream.directLinkActive ?? false,
+                      title: stream.title,
+                      src: stream.src,
+                      isActive: stream.isActive ?? false,
                     });
-
                     setSelectedStreamId("");
                   }}
                 >
                   <SelectTrigger className="rounded-sm">
                     <SelectValue placeholder="Pilih stream dari database" />
                   </SelectTrigger>
-
                   <SelectContent className="rounded-sm">
-                    {streams.map((stream) => (
+                    {iframe.map((stream) => (
                       <SelectItem
                         key={stream.id}
                         value={stream.id}
                         className="rounded-sm"
                       >
-                        {stream.name} — {stream.type.toUpperCase()}
+                        {stream.title}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-
                 <Button
                   type="button"
                   variant="outline"
@@ -549,13 +497,9 @@ const FormPosts = ({
                   onClick={() =>
                     append({
                       id: undefined,
-                      name: "",
-                      type: "hls",
-                      url: "",
-                      drmId: "",
-                      drmKey: "",
-                      directLink: "",
-                      directLinkActive: false,
+                      title: "",
+                      src: "",
+                      isActive: false,
                     })
                   }
                 >
@@ -563,7 +507,6 @@ const FormPosts = ({
                   New
                 </Button>
               </div>
-
               <div className="mt-3 space-y-3">
                 {fields.map((item, index) => (
                   <div
@@ -575,14 +518,12 @@ const FormPosts = ({
                         <span className="text-sm font-medium">
                           Stream {index + 1}
                         </span>
-
                         {item.id && (
                           <span className="ml-2 text-xs text-muted-foreground">
                             Existing
                           </span>
                         )}
                       </div>
-
                       <Button
                         type="button"
                         variant="ghost"
@@ -594,74 +535,196 @@ const FormPosts = ({
                         <span className="sr-only">Remove stream</span>
                       </Button>
                     </div>
-
                     <Controller
-                      name={`streams.${index}.name`}
+                      name={`iframe.${index}.title`}
                       control={form.control}
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel>Name</FieldLabel>
-
+                          <FieldLabel>Title</FieldLabel>
                           <Input
                             {...field}
                             className="rounded-sm"
                             aria-invalid={fieldState.invalid}
                           />
-
                           {fieldState.invalid && (
                             <FieldError errors={[fieldState.error]} />
                           )}
                         </Field>
                       )}
                     />
-
                     <Controller
-                      name={`streams.${index}.type`}
-                      control={form.control}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel>Type</FieldLabel>
-
-                          <Select
-                            value={field.value}
-                            onValueChange={field.onChange}
-                          >
-                            <SelectTrigger
-                              className="rounded-sm"
-                              aria-invalid={fieldState.invalid}
-                            >
-                              <SelectValue placeholder="Pilih type" />
-                            </SelectTrigger>
-
-                            <SelectContent className="rounded-sm">
-                              <SelectItem value="hls">HLS</SelectItem>
-
-                              <SelectItem value="dash">DASH</SelectItem>
-                            </SelectContent>
-                          </Select>
-
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
-                        </Field>
-                      )}
-                    />
-
-                    <Controller
-                      name={`streams.${index}.url`}
+                      name={`iframe.${index}.src`}
                       control={form.control}
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
                           <FieldLabel>URL</FieldLabel>
-
                           <Input
                             {...field}
                             type="url"
                             className="rounded-sm"
-                            placeholder="https://example.com/stream.m3u8"
+                            placeholder="https\://example.com/stream.m3u8"
                             aria-invalid={fieldState.invalid}
                           />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      )}
+                    />
+                    <Controller
+                      name={`iframe.${index}.isActive`}
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                            <div className="space-y-1">
+                              <FieldLabel htmlFor={`iframe-${index}-status`}>
+                                Status
+                              </FieldLabel>
+                              <p className="text-sm text-muted-foreground">
+                                {field.value ? "Active" : "Non Active"}
+                              </p>
+                            </div>
+                            <Switch
+                              id={`iframe-${index}-status`}
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              aria-invalid={fieldState.invalid}
+                            />
+                          </div>
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      )}
+                    />
+                  </div>
+                ))}
+              </div>
+            </Field>
 
+            <Field>
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <FieldLabel>Download URLs</FieldLabel>
+                  <FieldDescription>
+                    Pilih download dari database atau buat download baru.
+                  </FieldDescription>
+                </div>
+              </div>
+
+              <div className="mt-3 flex gap-2">
+                <Select
+                  value={selectedDownloadId}
+                  onValueChange={(value) => {
+                    const item = (downloads ?? []).find(
+                      (download) => download.id === value,
+                    );
+                    if (!item) return;
+
+                    const alreadyExists = form
+                      .getValues("download")
+                      .some((download) => download.id === item.id);
+
+                    if (alreadyExists) {
+                      toast.add({
+                        type: "error",
+                        description: "Download sudah ditambahkan.",
+                      });
+                      setSelectedDownloadId("");
+                      return;
+                    }
+
+                    appendDownload({
+                      id: item.id,
+                      quality: item.quality,
+                      links:
+                        item.links?.map((link) => ({
+                          id: link.id,
+                          name: link.name,
+                          url: link.url,
+                          isActive: link.isActive ?? true,
+                        })) ?? [],
+                      isActive: item.isActive ?? true,
+                    });
+                    setSelectedDownloadId("");
+                  }}
+                >
+                  <SelectTrigger className="rounded-sm">
+                    <SelectValue placeholder="Pilih download dari database" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-sm">
+                    {(downloads ?? []).map((item) => (
+                      <SelectItem
+                        key={item.id}
+                        value={item.id}
+                        className="rounded-sm"
+                      >
+                        {item.quality}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    appendDownload({
+                      id: undefined,
+                      quality: "",
+                      links: [],
+                      isActive: true,
+                    })
+                  }
+                >
+                  <PlusIcon />
+                  New
+                </Button>
+              </div>
+
+              <div className="mt-3 space-y-3">
+                {downloadFields.map((item, index) => (
+                  <div
+                    key={item.id}
+                    className="space-y-3 rounded-lg border p-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-medium">
+                          Download {index + 1}
+                        </span>
+                        {item.id && (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            Existing
+                          </span>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive"
+                        onClick={() => removeDownload(index)}
+                      >
+                        <Trash2Icon />
+                        <span className="sr-only">Remove download</span>
+                      </Button>
+                    </div>
+
+                    <Controller
+                      name={`download.${index}.quality`}
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Quality</FieldLabel>
+                          <Input
+                            {...field}
+                            className="rounded-sm"
+                            placeholder="1080p, 720p, 480p"
+                            aria-invalid={fieldState.invalid}
+                          />
                           {fieldState.invalid && (
                             <FieldError errors={[fieldState.error]} />
                           )}
@@ -670,72 +733,31 @@ const FormPosts = ({
                     />
 
                     <Controller
-                      name={`streams.${index}.drmId`}
+                      name={`download.${index}.isActive`}
                       control={form.control}
-                      render={({ field }) => (
-                        <Field>
-                          <FieldLabel>DRM ID</FieldLabel>
-
-                          <Input
-                            {...field}
-                            className="rounded-sm"
-                            placeholder="Optional"
-                          />
-                        </Field>
-                      )}
-                    />
-
-                    <Controller
-                      name={`streams.${index}.drmKey`}
-                      control={form.control}
-                      render={({ field }) => (
-                        <Field>
-                          <FieldLabel>DRM Key</FieldLabel>
-
-                          <Input
-                            {...field}
-                            className="rounded-sm"
-                            placeholder="Optional"
-                          />
-                        </Field>
-                      )}
-                    />
-
-                    <Controller
-                      name={`streams.${index}.directLink`}
-                      control={form.control}
-                      render={({ field }) => (
-                        <Field>
-                          <FieldLabel>Direct Link</FieldLabel>
-
-                          <Input
-                            {...field}
-                            type="url"
-                            className="rounded-sm"
-                            placeholder="Optional"
-                          />
-                        </Field>
-                      )}
-                    />
-
-                    <Controller
-                      name={`streams.${index}.directLinkActive`}
-                      control={form.control}
-                      render={({ field }) => (
-                        <Field>
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                            <div className="space-y-1">
+                              <FieldLabel>Download Status</FieldLabel>
+                              <p className="text-sm text-muted-foreground">
+                                {field.value ? "Active" : "Non Active"}
+                              </p>
+                            </div>
+                            <Switch
                               checked={field.value}
-                              onChange={field.onChange}
-                              className="h-4 w-4"
+                              onCheckedChange={field.onChange}
+                              aria-invalid={fieldState.invalid}
                             />
-
-                            <FieldLabel>Enable Direct Link</FieldLabel>
                           </div>
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
                         </Field>
                       )}
                     />
+
+                    <DownloadLinksEditor form={form} downloadIndex={index} />
                   </div>
                 ))}
               </div>
@@ -747,25 +769,42 @@ const FormPosts = ({
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>Categories</FieldLabel>
-
                   <Input
                     {...field}
-                    placeholder="MotoGP, Live Streaming, Catalunya"
+                    placeholder="Jav, Jav Cosplay, Local Pride"
                     className="rounded-sm"
                     aria-invalid={fieldState.invalid}
                   />
-
                   <FieldDescription>
                     Separate categories with commas.
                   </FieldDescription>
-
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}
                 </Field>
               )}
             />
-
+            <Controller
+              name="genres"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Genres</FieldLabel>
+                  <Input
+                    {...field}
+                    placeholder="Blackmail,Rape, Milf, Loli"
+                    className="rounded-sm"
+                    aria-invalid={fieldState.invalid}
+                  />
+                  <FieldDescription>
+                    Separate genres with commas.
+                  </FieldDescription>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
             <Controller
               name="content"
               control={form.control}
@@ -782,7 +821,6 @@ const FormPosts = ({
                     className="resize-y rounded-sm"
                     aria-invalid={fieldState.invalid}
                   />
-
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}
@@ -795,5 +833,134 @@ const FormPosts = ({
     </div>
   );
 };
+
+type DownloadFormValues = z.infer<typeof formSchema>;
+
+function DownloadLinksEditor({
+  form,
+  downloadIndex,
+}: {
+  form: ReturnType<typeof useForm<DownloadFormValues>>;
+  downloadIndex: number;
+}) {
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: `download.${downloadIndex}.links`,
+  });
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <FieldLabel>Links</FieldLabel>
+          <FieldDescription>
+            Tambahkan satu atau beberapa link untuk kualitas ini.
+          </FieldDescription>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            append({
+              id: undefined,
+              name: "",
+              url: "",
+              isActive: true,
+            })
+          }
+        >
+          <PlusIcon />
+          Add Link
+        </Button>
+      </div>
+
+      {fields.map((link, linkIndex) => (
+        <div key={link.id} className="space-y-3 rounded-lg border p-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Link {linkIndex + 1}</span>
+            {link.id && (
+              <span className="text-xs text-muted-foreground">Existing</span>
+            )}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="text-destructive"
+              onClick={() => remove(linkIndex)}
+            >
+              <Trash2Icon />
+              <span className="sr-only">Remove link</span>
+            </Button>
+          </div>
+
+          <Controller
+            name={`download.${downloadIndex}.links.${linkIndex}.name`}
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>Link Name</FieldLabel>
+                <Input
+                  {...field}
+                  className="rounded-sm"
+                  placeholder="Google Drive, MediaFire"
+                  aria-invalid={fieldState.invalid}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name={`download.${downloadIndex}.links.${linkIndex}.url`}
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel>URL</FieldLabel>
+                <Input
+                  {...field}
+                  type="url"
+                  className="rounded-sm"
+                  placeholder="https://example.com/file"
+                  aria-invalid={fieldState.invalid}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name={`download.${downloadIndex}.links.${linkIndex}.isActive`}
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                  <div className="space-y-1">
+                    <FieldLabel>Link Status</FieldLabel>
+                    <p className="text-sm text-muted-foreground">
+                      {field.value ? "Active" : "Non Active"}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    aria-invalid={fieldState.invalid}
+                  />
+                </div>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default FormPosts;

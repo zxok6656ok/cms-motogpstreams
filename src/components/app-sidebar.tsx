@@ -80,20 +80,11 @@ const data = {
           url: "profile",
           icon: User,
         },
-        {
-          title: "Hero",
-          url: "hero",
-          icon: Image,
-        },
+     
         {
           title: "Ads Widgets",
           url: "ads",
           icon: Settings2,
-        },
-        {
-          title: "Streams",
-          url: "streams",
-          icon: VideoIcon,
         },
         {
           title: "Settings",

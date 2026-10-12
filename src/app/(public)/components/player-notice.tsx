@@ -1,89 +1,70 @@
+
 import Link from "next/link";
-import { AlertTriangle, Send } from "lucide-react";
+import { AlertTriangle, Send, ArrowUpRight } from "lucide-react";
 import { PlayerSite } from "./player";
 
 const PlayerNotice = ({ site }: { site: PlayerSite }) => {
-  if (!site) return;
+  if (!site) return null;
+
   const telegramUrl = site.socialLinks.find(
     (social) => social.platform === "telegram",
   )?.url;
+
   return (
     <div className="mt-6 grid gap-4 md:grid-cols-2">
-      <div
-        className="
-          border-2 border-black
-          bg-[#FFD84D]
-          p-4
-          shadow-[5px_5px_0px_0px_#000]
-        "
-      >
-        <div className="flex items-start gap-3">
-          <div
-            className="
-              flex size-10 shrink-0 items-center justify-center
-              border-2 border-black
-              bg-white
-            "
-          >
-            <AlertTriangle className="size-5" />
-          </div>
+      {/* Player notice */}
+      <div className="flex gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+          <AlertTriangle className="size-5" />
+        </div>
 
-          <div>
-            <h2 className="font-black text-sm sm:text-base">
-              {site.playerNoticeTitle}
-            </h2>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-sm font-semibold text-foreground sm:text-base">
+            {site.playerNoticeTitle}
+          </h2>
 
-            <p className="mt-1 text-sm font-medium leading-5">
-              {site.playerNoticeDescription}
-            </p>
-          </div>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            {site.playerNoticeDescription}
+          </p>
         </div>
       </div>
 
-      <div
-        className="
-          border-2 border-black
-          bg-[#4d7aff]
-          p-4
-          shadow-[5px_5px_0px_0px_#000]
-        "
-      >
-        <div className="flex items-start gap-3">
-          <div
-            className="
-              flex size-10 shrink-0 items-center justify-center
-              border-2 border-black
-              bg-white
-            "
-          >
-            <Send className="size-5" />
-          </div>
+      {/* Telegram */}
+      <div className="flex gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
+          <Send className="size-5" />
+        </div>
 
-          <div>
-            <h2 className="font-black text-sm sm:text-base">{site.telegramTitle}</h2>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-sm font-semibold text-foreground sm:text-base">
+            {site.telegramTitle}
+          </h2>
 
-            <p className="mt-1 text-sm font-medium leading-5">
-              {site.telegramDescription}
-            </p>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            {site.telegramDescription}
+          </p>
 
+          {telegramUrl && (
             <Link
-              href={`${telegramUrl}`}
+              href={telegramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               className="
-                mt-3 inline-flex
-                border-2 border-black
-                bg-white
-                px-3 py-1.5
-                text-sm font-black
-                shadow-[3px_3px_0px_0px_#000]
-                transition-all
-                hover:translate-x-0.5
-                hover:translate-y-0.5
-                hover:shadow-none
+                mt-3 inline-flex items-center gap-2
+                rounded-lg bg-primary px-3.5 py-2
+                text-sm font-medium text-primary-foreground
+                transition-colors
+                hover:bg-primary/90
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-ring
+                focus-visible:ring-offset-2
               "
             >
               {site.telegramTitle}
+              <ArrowUpRight className="size-4" />
             </Link>
-          </div>
+          )}
         </div>
       </div>
     </div>

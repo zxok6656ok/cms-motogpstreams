@@ -1,42 +1,560 @@
 "use server";
 
-import { StatusArticle } from "@/generated/prisma/client";
+import { Prisma, StatusArticle } from "@/generated/prisma/client";
+
 import prisma from "../../../../../lib/prisma";
+
 import { revalidatePath, updateTag } from "next/cache";
+
+type ImportArticleInput = {
+  title: string;
+  url?: string;
+  img?: string;
+  image?: string;
+  date?: string;
+  categories: string;
+  genres: string;
+  iframe?: {
+    server: string;
+    src: string;
+  }[];
+  downloads?: {
+    quality: string;
+    links: {
+      name: string;
+      url: string;
+    }[];
+  }[];
+};
 
 type StreamInput = {
   id?: string;
-  name: string;
-  type: "hls" | "dash";
-  url: string;
-  drmId?: string;
-  drmKey?: string;
-  directLink?: string;
-  directLinkActive?: boolean;
+
+  title: string;
+
+  src: string;
+
+  isActive?: boolean;
+};
+
+type DownloadInput = {
+  id?: string;
+
+  quality: string;
+
+  isActive: boolean;
+
+  links: {
+    id?: string;
+
+    name: string;
+
+    url: string;
+
+    isActive: boolean;
+  }[];
+};
+
+type ArticleWithRelations = Prisma.ArticleGetPayload<{
+  include: {
+    iframe: true;
+
+    categories: true;
+
+    genres: true;
+
+    download: {
+      include: { links: true };
+    };
+  };
+}>;
+
+const revalidateArticlePaths = () => {
+  revalidatePath("/panel");
+
+  revalidatePath("/panel/posts");
+
+  revalidatePath("/[...slug]", "page");
+
+  revalidatePath("/category");
+
+  revalidatePath("/category/[...slug]", "page");
 };
 
 export const deleteArticle = async (postId: string) => {
   try {
     const article = await prisma.article.findUniqueOrThrow({
-      where: {
-        id: postId,
-      },
+      where: { id: postId },
+
       include: {
         categories: {
-          select: {
-            slug: true,
-          },
+          select: { slug: true },
+        },
+
+        genres: {
+          select: { slug: true },
         },
       },
     });
 
     await prisma.article.delete({
-      where: {
-        id: postId,
-      },
+      where: { id: postId },
     });
 
     updateTag("articles");
+
+    updateTag(`article:${article.slug}`);
+
+    updateTag("categories");
+
+    updateTag("genres");
+
+    for (const category of article.categories) {
+      updateTag(`category:${category.slug}`);
+    }
+
+    for (const genre of article.genres) {
+      updateTag(`genre:${genre.slug}`);
+    }
+
+    revalidateArticlePaths();
+
+    return {
+      success: true,
+
+      message: "Success to delete article",
+    };
+  } catch (error) {
+
+    throw new Error("Failed to delete article");
+  }
+};
+
+export const saveArticle = async (data: FormData, id?: string | null) => {
+  try {
+    const title = (data.get("title") as string) ?? "";
+
+    const uploadBy = (data.get("uploadBy") as string) || "ZZZ";
+
+    const thumbnail = (data.get("thumbnail") as string) || "";
+
+    const slug = (data.get("slug") as string) ?? "";
+
+    const status = data.get("status") as StatusArticle;
+
+    const metaDescription = (data.get("metaDescription") as string) || "";
+
+    const categories = (data.get("categories") as string) || "";
+
+    const genres = (data.get("genres") as string) || "";
+
+    const content = (data.get("content") as string) ?? "";
+
+    const streams = JSON.parse(
+      (data.get("iframe") as string) || "[]",
+    ) as StreamInput[];
+
+    const downloads = JSON.parse(
+      (data.get("download") as string) || "[]",
+    ) as DownloadInput[];
+
+    const categoryNames = [
+      ...new Set(
+        categories
+
+          .split(",")
+
+          .map((category) => category.trim())
+
+          .filter(Boolean),
+      ),
+    ];
+
+    const genresNames = [
+      ...new Set(
+        genres
+
+          .split(",")
+
+          .map((genre) => genre.trim())
+
+          .filter(Boolean),
+      ),
+    ];
+
+    const categoryRecords = await Promise.all(
+      categoryNames.map((name) => {
+        const categorySlug = name
+
+          .toLowerCase()
+
+          .trim()
+
+          .replace(/[^a-z0-9]+/g, "-")
+
+          .replace(/^-+|-+$/g, "");
+
+        return prisma.category.upsert({
+          where: { slug: categorySlug },
+
+          update: { name },
+
+          create: {
+            name,
+
+            slug: categorySlug,
+          },
+        });
+      }),
+    );
+
+    const genresRecords = await Promise.all(
+      genresNames.map((name) => {
+        const genreSlug = name
+
+          .toLowerCase()
+
+          .trim()
+
+          .replace(/[^a-z0-9]+/g, "-")
+
+          .replace(/^-+|-+$/g, "");
+
+        return prisma.genre.upsert({
+          where: { slug: genreSlug },
+
+          update: { name },
+
+          create: {
+            name,
+
+            slug: genreSlug,
+          },
+        });
+      }),
+    );
+
+    const article = await prisma.$transaction(async (tx) => {
+      let articleId = id;
+
+      let existingArticle: {
+        id: string;
+
+        slug: string;
+
+        categories: { slug: string }[];
+
+        genres: { slug: string }[];
+      } | null = null;
+
+      if (articleId) {
+        existingArticle = await tx.article.findUnique({
+          where: { id: articleId },
+
+          select: {
+            id: true,
+
+            slug: true,
+
+            categories: {
+              select: { slug: true },
+            },
+
+            genres: {
+              select: { slug: true },
+            },
+          },
+        });
+
+        if (!existingArticle) {
+          throw new Error("Article not found");
+        }
+
+        await tx.article.update({
+          where: { id: articleId },
+
+          data: {
+            title,
+
+            slug,
+
+            thumbnail,
+
+            uploadBy,
+
+            metaDescription,
+
+            content,
+
+            status,
+
+            categories: {
+              set: categoryRecords.map((category) => ({
+                id: category.id,
+              })),
+            },
+
+            genres: {
+              set: genresRecords.map((genre) => ({
+                id: genre.id,
+              })),
+            },
+          },
+        });
+      } else {
+        const createdArticle = await tx.article.create({
+          data: {
+            title,
+
+            slug,
+
+            thumbnail,
+
+            uploadBy,
+
+            metaDescription,
+
+            content,
+
+            status,
+
+            categories: {
+              connect: categoryRecords.map((category) => ({
+                id: category.id,
+              })),
+            },
+
+            genres: {
+              connect: genresRecords.map((genre) => ({
+                id: genre.id,
+              })),
+            },
+          },
+        });
+
+        articleId = createdArticle.id;
+      }
+
+      if (!articleId) {
+        throw new Error("Failed to resolve article ID");
+      }
+
+      const existingDownloads = await tx.download.findMany({
+        where: { articleId },
+        select: {
+          id: true,
+          links: { select: { id: true } },
+        },
+      });
+
+      const existingDownloadIds = new Set(
+        existingDownloads.map((download) => download.id),
+      );
+
+      const submittedDownloadIds = downloads
+        .map((download) => download.id)
+        .filter((downloadId): downloadId is string => Boolean(downloadId));
+
+      for (const downloadId of submittedDownloadIds) {
+        if (!existingDownloadIds.has(downloadId)) {
+          throw new Error("Download does not belong to this article");
+        }
+      }
+
+      const submittedDownloadIdSet = new Set(submittedDownloadIds);
+      const downloadIdsToDelete = existingDownloads
+        .map((download) => download.id)
+        .filter((downloadId) => !submittedDownloadIdSet.has(downloadId));
+
+      if (downloadIdsToDelete.length > 0) {
+        await tx.download.deleteMany({
+          where: {
+            articleId,
+            id: { in: downloadIdsToDelete },
+          },
+        });
+      }
+
+      for (const download of downloads) {
+        if (download.id) {
+          const existingDownloadRecord = existingDownloads.find(
+            (item) => item.id === download.id,
+          );
+
+          if (!existingDownloadRecord) {
+            throw new Error("Download does not belong to this article");
+          }
+
+          const existingLinkIds = new Set(
+            existingDownloadRecord.links.map((link) => link.id),
+          );
+
+          const submittedLinkIds = download.links
+            .map((link) => link.id)
+            .filter((linkId): linkId is string => Boolean(linkId));
+
+          for (const linkId of submittedLinkIds) {
+            if (!existingLinkIds.has(linkId)) {
+              throw new Error("Download link does not belong to this download");
+            }
+          }
+
+          const submittedLinkIdSet = new Set(submittedLinkIds);
+          const linkIdsToDelete = existingDownloadRecord.links
+            .map((link) => link.id)
+            .filter((linkId) => !submittedLinkIdSet.has(linkId));
+
+          if (linkIdsToDelete.length > 0) {
+            await tx.downloadLink.deleteMany({
+              where: {
+                downloadId: download.id,
+                id: { in: linkIdsToDelete },
+              },
+            });
+          }
+
+          await tx.download.update({
+            where: {
+              id: download.id,
+              articleId,
+            },
+            data: {
+              quality: download.quality,
+              isActive: download.isActive,
+            },
+          });
+
+          for (const link of download.links) {
+            if (link.id) {
+              await tx.downloadLink.update({
+                where: {
+                  id: link.id,
+                  downloadId: download.id,
+                },
+                data: {
+                  name: link.name,
+                  url: link.url,
+                  isActive: link.isActive,
+                },
+              });
+            } else {
+              await tx.downloadLink.create({
+                data: {
+                  name: link.name,
+                  url: link.url,
+                  isActive: link.isActive,
+                  downloadId: download.id,
+                },
+              });
+            }
+          }
+        } else {
+          await tx.download.create({
+            data: {
+              quality: download.quality,
+              isActive: download.isActive,
+              articleId,
+              links: {
+                create: download.links.map((link) => ({
+                  name: link.name,
+                  url: link.url,
+                  isActive: link.isActive,
+                })),
+              },
+            },
+          });
+        }
+      }
+
+      const existingStreams = await tx.iframe.findMany({
+        where: { articleId },
+
+        select: { id: true },
+      });
+
+      const existingIds = new Set(existingStreams.map((stream) => stream.id));
+
+      const submittedIds = streams
+
+        .map((stream) => stream.id)
+
+        .filter((streamId): streamId is string => Boolean(streamId));
+
+      for (const streamId of submittedIds) {
+        if (!existingIds.has(streamId)) {
+          throw new Error("Iframe does not belong to this article");
+        }
+      }
+
+      const submittedIdSet = new Set(submittedIds);
+
+      const idsToDelete = existingStreams
+
+        .map((stream) => stream.id)
+
+        .filter((streamId) => !submittedIdSet.has(streamId));
+
+      if (idsToDelete.length > 0) {
+        await tx.iframe.deleteMany({
+          where: {
+            articleId,
+
+            id: { in: idsToDelete },
+          },
+        });
+      }
+
+      for (const stream of streams) {
+        if (stream.id) {
+          await tx.iframe.update({
+            where: {
+              id: stream.id,
+
+              articleId,
+            },
+
+            data: {
+              title: stream.title,
+
+              src: stream.src,
+
+              isActive: stream.isActive ?? true,
+            },
+          });
+        } else {
+          await tx.iframe.create({
+            data: {
+              title: stream.title,
+
+              src: stream.src,
+
+              isActive: stream.isActive ?? true,
+
+              articleId,
+            },
+          });
+        }
+      }
+
+      return tx.article.findUniqueOrThrow({
+        where: { id: articleId },
+
+        include: {
+          iframe: true,
+
+          categories: true,
+
+          genres: true,
+
+          download: {
+            include: { links: true },
+          },
+        },
+      });
+    });
+
+    updateTag("articles");
+
     updateTag(`article:${article.slug}`);
 
     updateTag("categories");
@@ -45,318 +563,34 @@ export const deleteArticle = async (postId: string) => {
       updateTag(`category:${category.slug}`);
     }
 
-    revalidatePath("/panel");
-    revalidatePath("/panel/posts");
-    revalidatePath("/[...slug]", "page");
-    revalidatePath("/category");
-    revalidatePath("/category/[...slug]", "page");
-
-    return {
-      success: true,
-      message: "Success to delete article",
-    };
-  } catch (error) {
-    throw new Error("Failed to delete article");
-  }
-};
-
-export const saveArticle = async (data: FormData, id?: string | null) => {
-  try {
-    const title = data.get("title") as string;
-    const uploadBy = data.get("uploadBy") as string;
-    const thumbnail = data.get("thumbnail") as string;
-    const poster = data.get("poster") as string;
-    const slug = data.get("slug") as string;
-    const status = data.get("status") as StatusArticle;
-    const metaDescription = data.get("metaDescription") as string;
-    const categories = data.get("categories") as string;
-    const content = data.get("content") as string;
-
-    const streams = JSON.parse(
-      (data.get("streams") as string) || "[]",
-    ) as StreamInput[];
-
-    const categoryNames = categories
-      .split(",")
-      .map((category) => category.trim())
-      .filter(Boolean);
-
-    const categoryRecords = await Promise.all(
-      categoryNames.map((name) => {
-        const categorySlug = name
-          .toLowerCase()
-          .trim()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-+|-+$/g, "");
-
-        return prisma.category.upsert({
-          where: {
-            slug: categorySlug,
-          },
-          update: {
-            name,
-          },
-          create: {
-            name,
-            slug: categorySlug,
-          },
-        });
-      }),
-    );
-
-    let article;
-
     if (id) {
-      const existingArticle = await prisma.article.findUnique({
-        where: {
-          id,
-        },
-        select: {
-          slug: true,
-          categories: {
-            select: {
-              slug: true,
-            },
-          },
-        },
+      const previous = await prisma.article.findUnique({
+        where: { id },
+
+        select: { slug: true },
       });
 
-      if (!existingArticle) {
-        throw new Error("Article not found");
-      }
-
-      const existingStreams = await prisma.stream.findMany({
-        where: {
-          articles: {
-            some: {
-              id,
-            },
-          },
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      const submittedStreamIds = streams
-        .map((stream) => stream.id)
-        .filter((streamId): streamId is string => Boolean(streamId));
-
-      const existingStreamIds = existingStreams.map((stream) => stream.id);
-
-      const streamsToDelete = existingStreamIds.filter(
-        (streamId) => !submittedStreamIds.includes(streamId),
-      );
-
-      if (streamsToDelete.length > 0) {
-        await prisma.stream.updateMany({
-          where: {
-            id: {
-              in: streamsToDelete,
-            },
-          },
-          data: {},
-        });
-      }
-
-      const streamRecords = await Promise.all(
-        streams.map(async (stream) => {
-          if (stream.id) {
-            return prisma.stream.update({
-              where: {
-                id: stream.id,
-              },
-              data: {
-                name: stream.name,
-                type: stream.type,
-                url: stream.url,
-                drmId: stream.drmId,
-                drmKey: stream.drmKey,
-                directLink: stream.directLink,
-                directLinkActive: stream.directLinkActive,
-              },
-            });
-          }
-
-          return prisma.stream.create({
-            data: {
-              name: stream.name,
-              type: stream.type,
-              url: stream.url,
-              drmId: stream.drmId,
-              drmKey: stream.drmKey,
-              directLink: stream.directLink,
-              directLinkActive: stream.directLinkActive,
-            },
-          });
-        }),
-      );
-
-      article = await prisma.article.update({
-        where: {
-          id,
-        },
-        data: {
-          title,
-          slug,
-          thumbnail,
-          poster,
-          uploadBy,
-          metaDescription,
-          content,
-          status,
-
-          categories: {
-            set: categoryRecords.map((category) => ({
-              id: category.id,
-            })),
-          },
-
-          streams: {
-            set: streamRecords.map((stream) => ({
-              id: stream.id,
-            })),
-          },
-        },
-        include: {
-          streams: true,
-          categories: true,
-        },
-      });
-
-      if (streamsToDelete.length > 0) {
-        await prisma.stream.deleteMany({
-          where: {
-            id: {
-              in: streamsToDelete,
-            },
-            articles: {
-              none: {},
-            },
-          },
-        });
-      }
-
-      updateTag("articles");
-
-      if (existingArticle.slug) {
-        updateTag(`article:${existingArticle.slug}`);
-      }
-
-      updateTag(`article:${article.slug}`);
-
-      updateTag("categories");
-
-      const oldCategorySlugs = existingArticle.categories.map(
-        (category) => category.slug,
-      );
-
-      const newCategorySlugs = article.categories.map(
-        (category) => category.slug,
-      );
-
-      const affectedCategorySlugs = new Set([
-        ...oldCategorySlugs,
-        ...newCategorySlugs,
-      ]);
-
-      for (const categorySlug of affectedCategorySlugs) {
-        updateTag(`category:${categorySlug}`);
-      }
-
-      revalidatePath("/panel");
-      revalidatePath("/panel/posts");
-      revalidatePath("/[...slug]", "page");
-      revalidatePath("/category");
-      revalidatePath("/category/[...slug]", "page");
-    } else {
-      const streamRecords = await Promise.all(
-        streams.map(async (stream) => {
-          if (stream.id) {
-            return prisma.stream.update({
-              where: {
-                id: stream.id,
-              },
-              data: {
-                name: stream.name,
-                type: stream.type,
-                url: stream.url,
-                drmId: stream.drmId,
-                drmKey: stream.drmKey,
-                directLink: stream.directLink,
-                directLinkActive: stream.directLinkActive,
-              },
-            });
-          }
-
-          return prisma.stream.create({
-            data: {
-              name: stream.name,
-              type: stream.type,
-              url: stream.url,
-              drmId: stream.drmId,
-              drmKey: stream.drmKey,
-              directLink: stream.directLink,
-              directLinkActive: stream.directLinkActive,
-            },
-          });
-        }),
-      );
-
-      article = await prisma.article.create({
-        data: {
-          title,
-          slug,
-          thumbnail,
-          poster,
-          uploadBy,
-          metaDescription,
-          status,
-          content,
-
-          categories: {
-            connect: categoryRecords.map((category) => ({
-              id: category.id,
-            })),
-          },
-
-          streams: {
-            connect: streamRecords.map((stream) => ({
-              id: stream.id,
-            })),
-          },
-        },
-        include: {
-          streams: true,
-          categories: true,
-        },
-      });
-
-      updateTag("articles");
-      updateTag(`article:${article.slug}`);
-
-      updateTag("categories");
-
-      for (const category of article.categories) {
-        updateTag(`category:${category.slug}`);
-      }
-
-      revalidatePath("/panel");
-      revalidatePath("/panel/posts");
-      revalidatePath("/[...slug]", "page");
-      revalidatePath("/category");
-      revalidatePath("/category/[...slug]", "page");
+      void previous;
     }
 
+    revalidateArticlePaths();
+
     return {
       success: true,
-      data: article,
+
+      data: article as ArticleWithRelations,
+
       message: id
         ? "The post was successfully updated."
         : "The post was successfully created.",
     };
   } catch (error) {
-    throw new Error("Failed to save article");
+ 
+    throw new Error(
+      error instanceof Error
+        ? `Failed to save article: ${error.message}`
+        : "Failed to save article",
+    );
   }
 };
 
@@ -368,15 +602,16 @@ export const deleteAllArticle = async (ids: string[]) => {
 
     const articles = await prisma.article.findMany({
       where: {
-        id: {
-          in: ids,
-        },
+        id: { in: ids },
       },
+
       include: {
         categories: {
-          select: {
-            slug: true,
-          },
+          select: { slug: true },
+        },
+
+        genres: {
+          select: { slug: true },
         },
       },
     });
@@ -387,9 +622,7 @@ export const deleteAllArticle = async (ids: string[]) => {
 
     await prisma.article.deleteMany({
       where: {
-        id: {
-          in: ids,
-        },
+        id: { in: ids },
       },
     });
 
@@ -397,29 +630,134 @@ export const deleteAllArticle = async (ids: string[]) => {
 
     updateTag("categories");
 
+    updateTag("genres");
+
     const affectedCategorySlugs = new Set<string>();
+
+    const affectedGenreSlugs = new Set<string>();
 
     for (const article of articles) {
       updateTag(`article:${article.slug}`);
+
       for (const category of article.categories) {
         affectedCategorySlugs.add(category.slug);
       }
+
+      for (const genre of article.genres) {
+        affectedGenreSlugs.add(genre.slug);
+      }
     }
+
     for (const categorySlug of affectedCategorySlugs) {
       updateTag(`category:${categorySlug}`);
     }
 
-    revalidatePath("/panel");
-    revalidatePath("/panel/posts");
-    revalidatePath("/[...slug]", "page");
-    revalidatePath("/category");
-    revalidatePath("/category/[...slug]", "page");
+    for (const genreSlug of affectedGenreSlugs) {
+      updateTag(`genre:${genreSlug}`);
+    }
+
+    revalidateArticlePaths();
 
     return {
       success: true,
+
       message: `Success to delete ${articles.length} article`,
     };
   } catch (error) {
+
     throw new Error("Failed to delete articles");
   }
+};
+
+// json
+
+export const importArticles = async (items: ImportArticleInput[]) => {
+  const results: {
+    title: string;
+    success: boolean;
+    message: string;
+  }[] = [];
+
+  for (const [index, item] of items.entries()) {
+    try {
+      if (!item.title?.trim()) {
+        throw new Error("Title wajib diisi");
+      }
+
+      const slugBase = item.title
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
+      const formData = new FormData();
+
+      formData.set("title", item.title.trim());
+      formData.set("slug", `${slugBase}-${crypto.randomUUID().slice(0, 8)}`);
+      formData.set("uploadBy", "ZZZ");
+      formData.set("thumbnail", item.img || item.image || "");
+      formData.set("status", "publish");
+      formData.set("metaDescription", "");
+      formData.set("categories", item.categories || "");
+      formData.set("genres", item.genres || "");
+      formData.set("content", "");
+
+      formData.set(
+        "iframe",
+        JSON.stringify(
+          (item.iframe ?? []).map((stream) => ({
+            title: stream.server,
+            src: stream.src,
+            isActive: true,
+          })),
+        ),
+      );
+
+      formData.set(
+        "download",
+        JSON.stringify(
+          (item.downloads ?? []).map((download) => ({
+            quality: download.quality.trim(),
+            isActive: true,
+            links: download.links.map((link) => ({
+              name: link.name,
+              url: link.url,
+              isActive: true,
+            })),
+          })),
+        ),
+      );
+
+      const result = await saveArticle(formData, null);
+
+      if (result.success) {
+        updateTag("articles");
+        updateTag(`article:${result.data.slug}`);
+        updateTag("categories");
+
+        for (const category of result.data.categories) {
+          updateTag(`category:${category.slug}`);
+        }
+      }
+
+      results.push({
+        title: item.title,
+        success: true,
+        message: result.message,
+      });
+    } catch (error) {
+      results.push({
+        title: item.title || `Artikel ${index + 1}`,
+        success: false,
+        message: error instanceof Error ? error.message : "Import gagal",
+      });
+    }
+  }
+
+  return {
+    total: items.length,
+    success: results.filter((item) => item.success).length,
+    failed: results.filter((item) => !item.success).length,
+    results,
+  };
 };

@@ -31,58 +31,55 @@ export function ArticlePagination({
     return query ? `/?${query}` : "/";
   };
 
-  return (
-    <nav className="mt-12 flex flex-wrap items-center justify-center gap-3">
-      {currentPage > 1 ? (
-        <Link
-          href={createUrl(currentPage - 1)}
-          className="
-            border-4 border-black
-            bg-white
-            px-5 py-3
-            font-black
-            shadow-[5px_5px_0_#000]
-            transition-all
-            hover:translate-x-0.5
-            hover:translate-y-0.5
-            hover:shadow-[3px_3px_0_#000]
-          "
-        >
-          ← PREV
-        </Link>
-      ) : (
-        <span className="border-4 border-black bg-neutral-300 px-5 py-3 font-black opacity-50">
-          ← PREV
-        </span>
-      )}
 
-      <div className="border-4 border-black bg-[#ffde59] px-5 py-3 font-black shadow-[5px_5px_0_#000]">
-        {currentPage} / {totalPages}
-      </div>
+return (
+  <nav
+    aria-label="Pagination"
+    className="mt-10 flex flex-wrap items-center justify-center gap-2"
+  >
+    {currentPage > 1 ? (
+      <Link
+        href={createUrl(currentPage - 1)}
+        className="inline-flex h-10 items-center gap-2 rounded-lg border bg-background px-4 text-sm font-medium transition-colors hover:bg-muted"
+      >
+        <span aria-hidden="true">←</span>
+        Previous
+      </Link>
+    ) : (
+      <span
+        aria-disabled="true"
+        className="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-lg border bg-muted/50 px-4 text-sm font-medium text-muted-foreground opacity-60"
+      >
+        <span aria-hidden="true">←</span>
+        Previous
+      </span>
+    )}
 
-      {currentPage < totalPages ? (
-        <Link
-          href={createUrl(currentPage + 1)}
-          className="
-            border-4 border-black
-            bg-black
-            px-5 py-3
-            font-black
-            text-white
-            shadow-[5px_5px_0_#000]
-            transition-all
-            hover:translate-x-0.5
-            hover:translate-y-0.5
-            hover:shadow-[3px_3px_0_#000]
-          "
-        >
-          NEXT →
-        </Link>
-      ) : (
-        <span className="border-4 border-black bg-neutral-300 px-5 py-3 font-black opacity-50">
-          NEXT →
-        </span>
-      )}
-    </nav>
-  );
+    <span
+      aria-current="page"
+      className="inline-flex h-10 items-center rounded-lg border bg-muted/50 px-4 text-sm font-medium tabular-nums"
+    >
+      {currentPage} / {totalPages}
+    </span>
+
+    {currentPage < totalPages ? (
+      <Link
+        href={createUrl(currentPage + 1)}
+        className="inline-flex h-10 items-center gap-2 rounded-lg border bg-background px-4 text-sm font-medium transition-colors hover:bg-muted"
+      >
+        Next
+        <span aria-hidden="true">→</span>
+      </Link>
+    ) : (
+      <span
+        aria-disabled="true"
+        className="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-lg border bg-muted/50 px-4 text-sm font-medium text-muted-foreground opacity-60"
+      >
+        Next
+        <span aria-hidden="true">→</span>
+      </span>
+    )}
+  </nav>
+);
+
 }

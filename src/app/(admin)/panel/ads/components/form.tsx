@@ -46,6 +46,7 @@ export const adWidgetSchema = z.object({
     "sidebar",
     "floating",
     "footer",
+    "popunder",
   ]),
 
   order: z.number().int(),
